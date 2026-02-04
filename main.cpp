@@ -91,6 +91,17 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
     if (colon != std::string::npos) {
         std::string cmd = msg.substr(0, colon);
         std::string valStr = msg.substr(colon + 1);
+        
+        // Handle String Commands
+        if (cmd == "wave") {
+            if (valStr == "sine") g_waveform.store(Oscillator::WAVE_SIN);
+            else if (valStr == "saw") g_waveform.store(Oscillator::WAVE_POLYBLEP_SAW);
+            else if (valStr == "square") g_waveform.store(Oscillator::WAVE_POLYBLEP_SQUARE);
+            else if (valStr == "triangle") g_waveform.store(Oscillator::WAVE_POLYBLEP_TRI);
+            return;
+        }
+
+        // Handle Numeric Commands
         try {
             float val = std::stof(valStr);
             if (cmd == "freq") g_frequency.store(val);
@@ -98,12 +109,6 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
             else if (cmd == "cutoff") g_cutoff.store(val);
             else if (cmd == "res") g_res.store(val);
             else if (cmd == "reverb") g_reverbOn.store(val > 0.5f);
-            else if (cmd == "wave") {
-                if (valStr == "sine") g_waveform.store(Oscillator::WAVE_SIN);
-                else if (valStr == "saw") g_waveform.store(Oscillator::WAVE_POLYBLEP_SAW);
-                else if (valStr == "square") g_waveform.store(Oscillator::WAVE_POLYBLEP_SQUARE);
-                else if (valStr == "triangle") g_waveform.store(Oscillator::WAVE_POLYBLEP_TRI);
-            }
         } catch (...) {}
     }
   }
