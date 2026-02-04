@@ -111,8 +111,8 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
         // 5. Chorus
         if (cOn) {
             chorus.Process(left);
-            left = chorus.GetLeft();
-            right = chorus.GetRight();
+            left = chorus.GetLeft() * 1.4f; // Makeup Gain
+            right = chorus.GetRight() * 1.4f;
         }
 
         // 6. Delay
