@@ -26,6 +26,8 @@ DAISY_SRCS = \
 	DaisySP/Source/Control/adsr.cpp \
 	DaisySP/Source/Control/phasor.cpp \
 	DaisySP/Source/Effects/flanger.cpp \
+	DaisySP/Source/Effects/overdrive.cpp \
+	DaisySP/Source/Effects/chorus.cpp \
 	DaisySP/Source/Filters/svf.cpp \
 	DaisySP/Source/Synthesis/oscillator.cpp \
 	DaisySP/Source/Synthesis/variablesawosc.cpp \
