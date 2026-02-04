@@ -59,8 +59,11 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
     flt.SetFreq(g_cutoff.load());
     flt.SetRes(g_res.load());
     
-    drive.SetDrive(g_driveAmt.load());
-    
+    // Drive params
+    float drv = g_driveAmt.load();
+    drive.SetDrive(drv);
+    bool useDrive = (drv > 0.01f);
+
     // Envelope Params (Fixed for now, or add sliders later)
     env.SetTime(ADSR_SEG_ATTACK, 0.01f);
     env.SetTime(ADSR_SEG_DECAY, 0.1f);
@@ -95,7 +98,9 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
         sig *= envVal;
         
         // 3. Overdrive
-        sig = drive.Process(sig);
+        if (useDrive) {
+            sig = drive.Process(sig);
+        }
         
         // 4. Filter
         sig = flt.Process(sig);

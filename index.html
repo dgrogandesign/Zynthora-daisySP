@@ -160,6 +160,21 @@
                 <button id="delayBtn" onclick="toggleDelay()">DELAY</button>
                 <button id="verbBtn" onclick="toggleReverb()" class="active">REVERB</button>
             </div>
+            
+            <div class="control" style="margin-top: 10px;">
+                <label>DELAY TIME: <span id="dtimeVal">0.3</span>s</label>
+                <input type="range" id="dtime" min="0.05" max="0.9" value="0.3" step="0.01">
+            </div>
+            <div class="control">
+                <label>DELAY FEEDBACK: <span id="dfeedVal">0.4</span></label>
+                <input type="range" id="dfeed" min="0" max="0.9" value="0.4" step="0.01">
+            </div>
+        </div>
+
+        <!-- MASTER -->
+        <div class="control" style="border-top: 1px solid #444; padding-top: 15px;">
+            <label>MASTER VOL: <span id="ampVal">0.5</span></label>
+            <input type="range" id="amp" min="0" max="1" value="0.5" step="0.01">
         </div>
         
         <!-- KEYBOARD -->
@@ -178,9 +193,17 @@
             drive: document.getElementById('drive'),
             cutoff: document.getElementById('cutoff'),
             res: document.getElementById('res'),
+            dtime: document.getElementById('dtime'),
+            dfeed: document.getElementById('dfeed'),
+            amp: document.getElementById('amp'),
+            
             driveVal: document.getElementById('driveVal'),
             cutoffVal: document.getElementById('cutoffVal'), // FIXED
             resVal: document.getElementById('resVal'),
+            dtimeVal: document.getElementById('dtimeVal'),
+            dfeedVal: document.getElementById('dfeedVal'),
+            ampVal: document.getElementById('ampVal'),
+            
             status: document.getElementById('status')
         };
         
@@ -217,6 +240,9 @@
         bind('drive', 'drive');
         bind('cutoff', 'cutoff');
         bind('res', 'res');
+        bind('dtime', 'dtime');
+        bind('dfeed', 'dfeed');
+        bind('amp', 'amp');
 
         window.setWave = (type, btn) => {
             document.querySelectorAll('#waveforms button').forEach(b => b.classList.remove('active'));
