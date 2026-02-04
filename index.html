@@ -56,6 +56,12 @@
 </head>
 <body>
     <h1>ZYNTHORA (DaisySP)</h1>
+    <div style="margin-bottom: 20px; color: #888; font-size: 0.8rem; text-align: center;">
+        DSP CHAIN: <br>
+        <span style="color: #ff9900;">daisysp::Oscillator</span> (PolyBLEP) &rarr; <br>
+        <span style="color: #ff9900;">daisysp::MoogLadder</span> (4-Pole LPF) &rarr; <br>
+        <span style="color: #ff9900;">daisysp::ReverbSc</span> (FDN Stereo)
+    </div>
     
     <div class="panel">
         <div class="control">
@@ -86,6 +92,10 @@
         <div class="control">
             <label>AMP: <span id="ampVal">0.5</span></label>
             <input type="range" id="amp" min="0" max="1" value="0.5" step="0.01">
+        </div>
+
+        <div class="control" style="text-align: center;">
+            <button id="verbBtn" onclick="toggleReverb()" class="active" style="width: 100%; padding: 15px;">REVERB: ON</button>
         </div>
 
         <div id="status">Connecting...</div>
@@ -152,6 +162,21 @@
             document.querySelectorAll('#waveforms button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             send('wave', type);
+        };
+
+        let verbOn = true;
+        window.toggleReverb = () => {
+            verbOn = !verbOn;
+            const btn = document.getElementById('verbBtn');
+            if (verbOn) {
+                btn.classList.add('active');
+                btn.textContent = "REVERB: ON";
+                send('reverb', 1);
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = "REVERB: OFF";
+                send('reverb', 0);
+            }
         };
 
         connect();

@@ -20,6 +20,7 @@ std::atomic<float> g_amplitude(0.5f);
 std::atomic<float> g_cutoff(20000.0f);
 std::atomic<float> g_res(0.0f);
 std::atomic<int>   g_waveform(Oscillator::WAVE_SAW);
+std::atomic<bool>  g_reverbOn(true);
 
 // --- DSP OBJECTS ---
 Oscillator osc;
@@ -48,7 +49,12 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
         
         // 3. Reverb (Stereo)
         float outL, outR;
-        verb.Process(sig, sig, &outL, &outR);
+        if (g_reverbOn.load()) {
+            verb.Process(sig, sig, &outL, &outR);
+        } else {
+            outL = sig;
+            outR = sig;
+        }
 
         // 4. Output
         pOut[i * DEVICE_CHANNELS]     = outL;
@@ -91,6 +97,7 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
             else if (cmd == "amp") g_amplitude.store(val);
             else if (cmd == "cutoff") g_cutoff.store(val);
             else if (cmd == "res") g_res.store(val);
+            else if (cmd == "reverb") g_reverbOn.store(val > 0.5f);
             else if (cmd == "wave") {
                 if (valStr == "sine") g_waveform.store(Oscillator::WAVE_SIN);
                 else if (valStr == "saw") g_waveform.store(Oscillator::WAVE_POLYBLEP_SAW);
