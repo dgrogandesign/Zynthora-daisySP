@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zynthora DaisySP</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #ff9900;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            touch-action: none;
+        }
+        h1 { border-bottom: 2px solid #ff9900; padding-bottom: 0.5rem; }
+        .panel {
+            background: #222;
+            border: 1px solid #444;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 400px;
+        }
+        .control { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        
+        input[type=range] { width: 100%; accent-color: #ff9900; }
+        
+        .btn-group { display: flex; gap: 5px; justify-content: center; }
+        button {
+            background: #333;
+            color: #fff;
+            border: 1px solid #666;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+        button.active {
+            background: #ff9900;
+            color: #000;
+            border-color: #ff9900;
+        }
+        
+        #status {
+            margin-top: 1rem;
+            color: #666;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZYNTHORA (DaisySP)</h1>
+    
+    <div class="panel">
+        <div class="control">
+            <label>OSCILLATOR</label>
+            <div class="btn-group" id="waveforms">
+                <button onclick="setWave('sine', this)" class="active">SINE</button>
+                <button onclick="setWave('saw', this)">SAW</button>
+                <button onclick="setWave('square', this)">SQR</button>
+                <button onclick="setWave('triangle', this)">TRI</button>
+            </div>
+        </div>
+
+        <div class="control">
+            <label>FREQ: <span id="freqVal">440</span> Hz</label>
+            <input type="range" id="freq" min="50" max="880" value="440" step="1">
+        </div>
+
+        <div class="control">
+            <label>CUTOFF: <span id="cutVal">20000</span> Hz</label>
+            <input type="range" id="cutoff" min="100" max="10000" value="10000" step="10">
+        </div>
+
+        <div class="control">
+            <label>RESONANCE: <span id="resVal">0.0</span></label>
+            <input type="range" id="res" min="0" max="0.95" value="0.0" step="0.01">
+        </div>
+
+        <div class="control">
+            <label>AMP: <span id="ampVal">0.5</span></label>
+            <input type="range" id="amp" min="0" max="1" value="0.5" step="0.01">
+        </div>
+
+        <div id="status">Connecting...</div>
+    </div>
+
+    <script>
+        const els = {
+            freq: document.getElementById('freq'),
+            amp: document.getElementById('amp'),
+            cutoff: document.getElementById('cutoff'),
+            res: document.getElementById('res'),
+            freqVal: document.getElementById('freqVal'),
+            ampVal: document.getElementById('ampVal'),
+            cutVal: document.getElementById('cutVal'),
+            resVal: document.getElementById('resVal'),
+            status: document.getElementById('status')
+        };
+        
+        let socket;
+
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = protocol + '//' + window.location.host + '/websocket';
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = () => {
+                els.status.textContent = "DAISY LINK ONLINE";
+                els.status.style.color = "#ff9900";
+            };
+            socket.onclose = () => {
+                els.status.textContent = "OFFLINE (RETRYING...)";
+                els.status.style.color = "red";
+                setTimeout(connect, 2000);
+            };
+        }
+
+        function send(cmd, val) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(cmd + ":" + val);
+            }
+        }
+
+        els.freq.addEventListener('input', (e) => {
+            els.freqVal.textContent = e.target.value;
+            send('freq', e.target.value);
+        });
+
+        els.cutoff.addEventListener('input', (e) => {
+            els.cutVal.textContent = e.target.value;
+            send('cutoff', e.target.value);
+        });
+
+        els.res.addEventListener('input', (e) => {
+            els.resVal.textContent = e.target.value;
+            send('res', e.target.value);
+        });
+
+        els.amp.addEventListener('input', (e) => {
+            els.ampVal.textContent = e.target.value;
+            send('amp', e.target.value);
+        });
+
+        window.setWave = (type, btn) => {
+            document.querySelectorAll('#waveforms button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            send('wave', type);
+        };
+
+        connect();
+    </script>
+</body>
+</html>
