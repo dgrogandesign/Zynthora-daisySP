@@ -186,13 +186,40 @@
                 <button id="verbBtn" onclick="toggleReverb()">REVERB</button>
             </div>
             
-            <div class="control" style="margin-top: 10px;">
-                <label>DELAY TIME: <span id="dtimeVal">0.3</span>s</label>
-                <input type="range" id="dtime" min="0.05" max="0.9" value="0.3" step="0.01">
+            <!-- DELAY CONTROLS -->
+            <div id="delay_controls" class="hidden" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+                <div class="control">
+                    <label>DELAY TIME: <span id="dtimeVal">0.3</span>s</label>
+                    <input type="range" id="dtime" min="0.05" max="0.9" value="0.3" step="0.01">
+                </div>
+                <div class="control">
+                    <label>DELAY FEEDBACK: <span id="dfeedVal">0.4</span></label>
+                    <input type="range" id="dfeed" min="0" max="0.9" value="0.4" step="0.01">
+                </div>
             </div>
-            <div class="control">
-                <label>DELAY FEEDBACK: <span id="dfeedVal">0.4</span></label>
-                <input type="range" id="dfeed" min="0" max="0.9" value="0.4" step="0.01">
+
+            <!-- CHORUS CONTROLS -->
+            <div id="chorus_controls" class="hidden" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+                <div class="control">
+                    <label>CHORUS RATE: <span id="crateVal">0.3</span>Hz</label>
+                    <input type="range" id="crate" min="0.1" max="5.0" value="0.3" step="0.1">
+                </div>
+                <div class="control">
+                    <label>CHORUS DEPTH: <span id="cdepthVal">0.8</span></label>
+                    <input type="range" id="cdepth" min="0" max="1.0" value="0.8" step="0.01">
+                </div>
+            </div>
+
+            <!-- REVERB CONTROLS -->
+            <div id="reverb_controls" class="hidden" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+                <div class="control">
+                    <label>REVERB DECAY: <span id="rtimeVal">0.85</span></label>
+                    <input type="range" id="rtime" min="0.3" max="0.99" value="0.85" step="0.01">
+                </div>
+                <div class="control">
+                    <label>REVERB TONE: <span id="rtoneVal">10000</span>Hz</label>
+                    <input type="range" id="rtone" min="1000" max="18000" value="10000" step="100">
+                </div>
             </div>
         </div>
 
@@ -218,8 +245,14 @@
             drive: document.getElementById('drive'),
             cutoff: document.getElementById('cutoff'),
             res: document.getElementById('res'),
+            
             dtime: document.getElementById('dtime'),
             dfeed: document.getElementById('dfeed'),
+            crate: document.getElementById('crate'),
+            cdepth: document.getElementById('cdepth'),
+            rtime: document.getElementById('rtime'),
+            rtone: document.getElementById('rtone'),
+            
             amp: document.getElementById('amp'),
             fm_ratio: document.getElementById('fm_ratio'),
             fm_index: document.getElementById('fm_index'),
@@ -227,8 +260,14 @@
             driveVal: document.getElementById('driveVal'),
             cutoffVal: document.getElementById('cutoffVal'),
             resVal: document.getElementById('resVal'),
+            
             dtimeVal: document.getElementById('dtimeVal'),
             dfeedVal: document.getElementById('dfeedVal'),
+            crateVal: document.getElementById('crateVal'),
+            cdepthVal: document.getElementById('cdepthVal'),
+            rtimeVal: document.getElementById('rtimeVal'),
+            rtoneVal: document.getElementById('rtoneVal'),
+            
             ampVal: document.getElementById('ampVal'),
             fm_ratioVal: document.getElementById('fm_ratioVal'),
             fm_indexVal: document.getElementById('fm_indexVal'),
@@ -237,7 +276,12 @@
             
             fm_controls: document.getElementById('fm_controls'),
             fm_custom_on: document.getElementById('fm_custom_on'),
-            fm_mod_wave: document.getElementById('fm_mod_wave')
+            fm_mod_wave: document.getElementById('fm_mod_wave'),
+            
+            // FX Panels
+            delay_controls: document.getElementById('delay_controls'),
+            chorus_controls: document.getElementById('chorus_controls'),
+            reverb_controls: document.getElementById('reverb_controls')
         };
         
         let socket;
@@ -260,21 +304,22 @@
             send('drive', els.drive.value);
             send('cutoff', els.cutoff.value);
             send('res', els.res.value);
+            
             send('dtime', els.dtime.value);
             send('dfeed', els.dfeed.value);
+            send('chorus_rate', els.crate.value);
+            send('chorus_depth', els.cdepth.value);
+            send('reverb_time', els.rtime.value);
+            send('reverb_tone', els.rtone.value);
+            
             send('amp', els.amp.value);
             send('fm_ratio', els.fm_ratio.value);
             send('fm_index', els.fm_index.value);
             
-            // Toggles (Read button classes or explicit state)
-            const isRev = document.getElementById('verbBtn').classList.contains('active');
-            const isCho = document.getElementById('chorusBtn').classList.contains('active');
-            const isDel = document.getElementById('delayBtn').classList.contains('active');
-            send('reverb', isRev ? 1 : 0);
-            send('chorus', isCho ? 1 : 0);
-            send('delay', isDel ? 1 : 0);
+            // Toggles
+            updateFxState();
             
-            // Waveform (Global var)
+            // Waveform
             send('wave', currentWave);
             
             // Custom FM
@@ -305,6 +350,10 @@
         bind('res', 'res');
         bind('dtime', 'dtime');
         bind('dfeed', 'dfeed');
+        bind('crate', 'chorus_rate');
+        bind('cdepth', 'chorus_depth');
+        bind('rtime', 'reverb_time');
+        bind('rtone', 'reverb_tone');
         bind('amp', 'amp');
         bind('fm_ratio', 'fm_ratio');
         bind('fm_index', 'fm_index');
@@ -340,21 +389,38 @@
             send('mod_wave', sel.value);
         };
 
-        const toggleFx = (btnId, cmd, startState) => {
-            let state = startState;
+        const toggleFx = (btnId, panelId, cmd) => {
             const btn = document.getElementById(btnId);
-            const update = () => {
-                btn.classList.toggle('active', state);
-                send(cmd, state ? 1 : 0);
-            };
-            // update(); // Set initial (Assuming defaults are OFF in UI)
-            return () => { state = !state; update(); };
-        };
+            const panel = document.getElementById(panelId);
+            
+            // Initial state check (for defaults)
+            if (btn.classList.contains('active')) {
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
 
-        // Defaults are FALSE now
-        window.toggleReverb = toggleFx('verbBtn', 'reverb', false);
-        window.toggleChorus = toggleFx('chorusBtn', 'chorus', false);
-        window.toggleDelay  = toggleFx('delayBtn', 'delay', false);
+            return () => {
+                const isActive = btn.classList.toggle('active');
+                if (isActive) panel.classList.remove('hidden');
+                else panel.classList.add('hidden');
+                send(cmd, isActive ? 1 : 0);
+            };
+        };
+        
+        // Helper to just send current state of buttons
+        function updateFxState() {
+             const isRev = document.getElementById('verbBtn').classList.contains('active');
+             const isCho = document.getElementById('chorusBtn').classList.contains('active');
+             const isDel = document.getElementById('delayBtn').classList.contains('active');
+             send('reverb', isRev ? 1 : 0);
+             send('chorus', isCho ? 1 : 0);
+             send('delay', isDel ? 1 : 0);
+        }
+
+        window.toggleReverb = toggleFx('verbBtn', 'reverb_controls', 'reverb');
+        window.toggleChorus = toggleFx('chorusBtn', 'chorus_controls', 'chorus');
+        window.toggleDelay  = toggleFx('delayBtn', 'delay_controls', 'delay');
 
         // --- KEYBOARD LOGIC ---
         // Standard "QWERTY Piano" mapping (Ableton/Logic style)

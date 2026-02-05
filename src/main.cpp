@@ -50,8 +50,16 @@ struct Engine {
     int   waveform   = Oscillator::WAVE_SIN;
     float amp        = 0.5f;
     float driveAmt   = 0.0f;
+    
+    // Effects State
     bool  chorusOn   = false;
+    float chorusRate = 0.3f;
+    float chorusDepth= 0.8f;
+    
     bool  reverbOn   = false;
+    float reverbTime = 0.85f; // Feedback
+    float reverbTone = 10000.0f; // LP Cutoff
+    
     bool  delayOn    = false;
     float delayFeed  = 0.4f;
     bool  gate       = false;
@@ -70,8 +78,8 @@ struct Engine {
         fm.Init(sampleRate);
         flt.Init(sampleRate);
         verb.Init(sampleRate);
-        verb.SetFeedback(0.85f);
-        verb.SetLpFreq(10000.0f);
+        verb.SetFeedback(reverbTime);
+        verb.SetLpFreq(reverbTone);
         env.Init(sampleRate);
         env.SetTime(ADSR_SEG_ATTACK, 0.01f);
         env.SetTime(ADSR_SEG_DECAY, 0.1f);
@@ -160,18 +168,42 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
                         g_engine.mod.SetWaveform((int)evt.value);
                         break;
 
-                    // --- BOOLEAN TOGGLES (Packed as floats for now) ---
+                    // --- EFFECTS TOGGLES ---
                     case P_MIX_REV_SEND: g_engine.reverbOn = (evt.value > 0.5f); break;
                     case P_MIX_DLY_SEND: g_engine.delayOn  = (evt.value > 0.5f); break;
                     case 300: g_engine.chorusOn = (evt.value > 0.5f); break;
                     
-                    // --- DELAY TIME ---
+                    // --- DELAY PARAMS ---
                     case 301: // Delay Time
                         g_engine.delL.SetDelay(evt.value * sampleRate);
                         g_engine.delR.SetDelay(evt.value * sampleRate);
                         break;
                     case 302: // Delay Feed
                         g_engine.delayFeed = evt.value;
+                        break;
+                    
+                    // --- CHORUS PARAMS ---
+                    case 310: 
+                        g_engine.chorusRate = evt.value; 
+                        g_engine.chorus.SetLfoFreq(evt.value);
+                        std::cout << "CMD: Chorus Rate " << evt.value << std::endl;
+                        break;
+                    case 311: 
+                        g_engine.chorusDepth = evt.value; 
+                        g_engine.chorus.SetLfoDepth(evt.value);
+                        std::cout << "CMD: Chorus Depth " << evt.value << std::endl;
+                        break;
+
+                    // --- REVERB PARAMS ---
+                    case 320: 
+                        g_engine.reverbTime = evt.value;
+                        g_engine.verb.SetFeedback(g_engine.reverbTime); 
+                        std::cout << "CMD: Reverb Time " << evt.value << std::endl;
+                        break;
+                    case 321: 
+                        g_engine.reverbTone = evt.value;
+                        g_engine.verb.SetLpFreq(g_engine.reverbTone);
+                        std::cout << "CMD: Reverb Tone " << evt.value << std::endl;
                         break;
                 }
                 break;
@@ -182,6 +214,7 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
     static bool printedFmDebug = false;
     
     for (ma_uint32 i = 0; i < frameCount; ++i) {
+        // ... (rest of audio loop same as before)
         // Envelope
         float envVal = g_engine.env.Process(g_engine.gate);
         
@@ -339,6 +372,14 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
             // Delay Params
             else if (cmd == "dtime")  send_param(301, val);
             else if (cmd == "dfeed")  send_param(302, val);
+            
+            // Chorus Params
+            else if (cmd == "chorus_rate")  send_param(310, val);
+            else if (cmd == "chorus_depth") send_param(311, val);
+            
+            // Reverb Params
+            else if (cmd == "reverb_time") send_param(320, val);
+            else if (cmd == "reverb_tone") send_param(321, val);
             
             // FM Params
             else if (cmd == "fm_ratio") send_param(200, val);
