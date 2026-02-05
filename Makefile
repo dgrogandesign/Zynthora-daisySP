@@ -31,6 +31,7 @@ DAISY_SRCS = \
 	DaisySP/Source/Filters/svf.cpp \
 	DaisySP/Source/Synthesis/oscillator.cpp \
 	DaisySP/Source/Synthesis/variablesawosc.cpp \
+	DaisySP/Source/Synthesis/fm2.cpp \
 	DaisySP/Source/Utility/metro.cpp \
 	DaisySP/Source/Utility/dcblock.cpp
 

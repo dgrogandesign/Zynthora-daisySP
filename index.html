@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynthora Playable</title>
+    <title>Zynthora FM</title>
     <style>
         body {
             font-family: monospace;
@@ -118,7 +118,7 @@
     </style>
 </head>
 <body>
-    <h1>ZYNTHORA PLAYABLE</h1>
+    <h1>ZYNTHORA FM</h1>
     
     <div class="panel">
         
@@ -131,8 +131,21 @@
                     <button onclick="setWave('triangle', this)">TRI</button>
                     <button onclick="setWave('saw', this)" class="active">SAW</button>
                     <button onclick="setWave('square', this)">SQR</button>
+                    <button onclick="setWave('fm', this)">FM</button>
                 </div>
             </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div class="control" style="flex: 1;">
+                    <label>FM RATIO: <span id="fm_ratioVal">2.0</span></label>
+                    <input type="range" id="fm_ratio" min="0.1" max="10.0" value="2.0" step="0.1">
+                </div>
+                <div class="control" style="flex: 1;">
+                    <label>FM INDEX: <span id="fm_indexVal">1.0</span></label>
+                    <input type="range" id="fm_index" min="0.0" max="5.0" value="1.0" step="0.1">
+                </div>
+            </div>
+
             <div class="control" style="margin-top: 10px;">
                 <label>DRIVE: <span id="driveVal">0.0</span></label>
                 <input type="range" id="drive" min="0" max="1" value="0.0" step="0.01">
@@ -196,13 +209,17 @@
             dtime: document.getElementById('dtime'),
             dfeed: document.getElementById('dfeed'),
             amp: document.getElementById('amp'),
+            fm_ratio: document.getElementById('fm_ratio'),
+            fm_index: document.getElementById('fm_index'),
             
             driveVal: document.getElementById('driveVal'),
-            cutoffVal: document.getElementById('cutoffVal'), // FIXED
+            cutoffVal: document.getElementById('cutoffVal'),
             resVal: document.getElementById('resVal'),
             dtimeVal: document.getElementById('dtimeVal'),
             dfeedVal: document.getElementById('dfeedVal'),
             ampVal: document.getElementById('ampVal'),
+            fm_ratioVal: document.getElementById('fm_ratioVal'),
+            fm_indexVal: document.getElementById('fm_indexVal'),
             
             status: document.getElementById('status')
         };
@@ -243,6 +260,8 @@
         bind('dtime', 'dtime');
         bind('dfeed', 'dfeed');
         bind('amp', 'amp');
+        bind('fm_ratio', 'fm_ratio');
+        bind('fm_index', 'fm_index');
 
         window.setWave = (type, btn) => {
             document.querySelectorAll('#waveforms button').forEach(b => b.classList.remove('active'));

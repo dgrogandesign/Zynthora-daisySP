@@ -8,6 +8,7 @@
 #include "Effects/chorus.h"
 #include "Control/adsr.h"
 #include "Utility/delayline.h"
+#include "Synthesis/fm2.h"
 #include <atomic>
 #include <iostream>
 #include <string>
@@ -18,6 +19,7 @@ using namespace daisysp;
 #define DEVICE_CHANNELS     2
 #define DEVICE_SAMPLE_RATE  48000
 #define DELAY_MAX_SAMPLES   48000 
+#define WAVE_FM             100
 
 // --- GLOBAL STATE ---
 std::atomic<float> g_frequency(440.0f);
@@ -26,6 +28,10 @@ std::atomic<float> g_cutoff(20000.0f);
 std::atomic<float> g_res(0.0f);
 std::atomic<int>   g_waveform(Oscillator::WAVE_SAW);
 std::atomic<bool>  g_gate(false); 
+
+// FM State
+std::atomic<float> g_fmRatio(2.0f);
+std::atomic<float> g_fmIndex(1.0f);
 
 // Effects State
 std::atomic<float> g_driveAmt(0.0f);
@@ -37,6 +43,7 @@ std::atomic<float> g_delayFeed(0.4f);
 
 // --- DSP OBJECTS ---
 Oscillator osc;
+Fm2        fm;
 Adsr       env;
 MoogLadder flt;
 ReverbSc   verb;
@@ -52,9 +59,20 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
     float sampleRate = (float)DEVICE_SAMPLE_RATE;
     
     // Update DSP Params
-    osc.SetFreq(g_frequency.load());
+    float freq = g_frequency.load();
+    int wave = g_waveform.load();
+    
+    // Standard Osc
+    osc.SetFreq(freq);
     osc.SetAmp(g_amplitude.load());
-    osc.SetWaveform(g_waveform.load());
+    if (wave != WAVE_FM) {
+        osc.SetWaveform(wave);
+    }
+    
+    // FM Params
+    fm.SetFrequency(freq);
+    fm.SetRatio(g_fmRatio.load());
+    fm.SetIndex(g_fmIndex.load());
     
     flt.SetFreq(g_cutoff.load());
     flt.SetRes(g_res.load());
@@ -64,7 +82,7 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
     drive.SetDrive(drv);
     bool useDrive = (drv > 0.01f);
 
-    // Envelope Params (Fixed for now, or add sliders later)
+    // Envelope Params
     env.SetTime(ADSR_SEG_ATTACK, 0.01f);
     env.SetTime(ADSR_SEG_DECAY, 0.1f);
     env.SetSustainLevel(0.8f);
@@ -83,16 +101,19 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
         chorus.SetLfoDepth(0.8f);
     }
     
-    // Gate logic needs to be handled carefully in the block if it changes rapidly, 
-    // but for now we poll it once per block is okayish for <10ms latency.
     bool gate = g_gate.load();
 
     for (ma_uint32 i = 0; i < frameCount; ++i) {
         // 1. Envelope
         float envVal = env.Process(gate);
         
-        // 2. Oscillator
-        float sig = osc.Process();
+        // 2. Source (Oscillator or FM)
+        float sig;
+        if (wave == WAVE_FM) {
+            sig = fm.Process();
+        } else {
+            sig = osc.Process();
+        }
         
         // Apply Envelope BEFORE effects
         sig *= envVal;
@@ -136,8 +157,10 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
             outR = right;
         }
 
-        pOut[i * DEVICE_CHANNELS]     = outL;
-        pOut[i * DEVICE_CHANNELS + 1] = outR;
+        // 8. Output Gain
+        float amp = g_amplitude.load();
+        pOut[i * DEVICE_CHANNELS]     = outL * amp;
+        pOut[i * DEVICE_CHANNELS + 1] = outR * amp;
     }
     (void)pInput;
 }
@@ -149,7 +172,6 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *) ev_data;
     std::string uri(hm->uri.buf, hm->uri.len);
-    // std::cout << "HTTP Request: " << uri << std::endl; 
 
     if (uri == "/websocket") {
         mg_ws_upgrade(c, hm, NULL);
@@ -170,18 +192,21 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
         std::string cmd = msg.substr(0, colon);
         std::string valStr = msg.substr(colon + 1);
         
+        // String Commands
         if (cmd == "wave") {
             if (valStr == "sine") g_waveform.store(Oscillator::WAVE_SIN);
             else if (valStr == "saw") g_waveform.store(Oscillator::WAVE_POLYBLEP_SAW);
             else if (valStr == "square") g_waveform.store(Oscillator::WAVE_POLYBLEP_SQUARE);
             else if (valStr == "triangle") g_waveform.store(Oscillator::WAVE_POLYBLEP_TRI);
+            else if (valStr == "fm") g_waveform.store(WAVE_FM);
             return;
         }
 
+        // Numeric Commands
         try {
             float val = std::stof(valStr);
             if (cmd == "freq") g_frequency.store(val);
-            else if (cmd == "note") g_frequency.store(mtof(val));
+            else if (cmd == "note") g_frequency.store(daisysp::mtof(val));
             else if (cmd == "gate") g_gate.store(val > 0.5f);
             else if (cmd == "amp") g_amplitude.store(val);
             else if (cmd == "cutoff") g_cutoff.store(val);
@@ -192,6 +217,8 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
             else if (cmd == "delay") g_delayOn.store(val > 0.5f);
             else if (cmd == "dtime") g_delayTime.store(val);
             else if (cmd == "dfeed") g_delayFeed.store(val);
+            else if (cmd == "fm_ratio") g_fmRatio.store(val);
+            else if (cmd == "fm_index") g_fmIndex.store(val);
         } catch (...) {
             std::cout << "Parse Error for: " << cmd << ":" << valStr << std::endl;
         }
@@ -203,6 +230,7 @@ int main() {
     float sampleRate = (float)DEVICE_SAMPLE_RATE;
     
     osc.Init(sampleRate);
+    fm.Init(sampleRate); // FM Init
     flt.Init(sampleRate);
     verb.Init(sampleRate);
     verb.SetFeedback(0.85f);
@@ -224,7 +252,7 @@ int main() {
     if (ma_device_init(NULL, &config, &device) != MA_SUCCESS) return -1;
     if (ma_device_start(&device) != MA_SUCCESS) return -1;
 
-    std::cout << "Zynthora (Playable) Started." << std::endl;
+    std::cout << "Zynthora (FM Edition) Started." << std::endl;
 
     mg_log_set(0); 
     struct mg_mgr mgr;
