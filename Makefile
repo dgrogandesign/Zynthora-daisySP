@@ -1,7 +1,7 @@
 CC = g++
 
 # Include all subdirectories of DaisySP/Source and DaisySP-LGPL/Source
-INCLUDES = -I. \
+INCLUDES = -I. -Isrc \
 	-IDaisySP/Source \
 	-IDaisySP/Source/Control \
 	-IDaisySP/Source/Drums \
@@ -41,7 +41,7 @@ DAISY_LGPL_SRCS = \
 	DaisySP/DaisySP-LGPL/Source/Filters/moogladder.cpp
 
 # Main Sources
-SRCS = main.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS)
+SRCS = src/main.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS)
 
 all: zynthora
 

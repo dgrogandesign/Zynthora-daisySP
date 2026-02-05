@@ -115,6 +115,8 @@
             font-size: 0.8rem;
             text-align: center;
         }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -127,15 +129,25 @@
             <div class="section-title">SOURCE</div>
             <div class="control">
                 <div class="btn-group" id="waveforms">
-                    <button onclick="setWave('sine', this)">SIN</button>
+                    <button onclick="setWave('sine', this)" class="active">SIN</button>
                     <button onclick="setWave('triangle', this)">TRI</button>
-                    <button onclick="setWave('saw', this)" class="active">SAW</button>
+                    <button onclick="setWave('saw', this)">SAW</button>
                     <button onclick="setWave('square', this)">SQR</button>
                     <button onclick="setWave('fm', this)">FM</button>
                 </div>
             </div>
             
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; border-top: 1px solid #333; padding-top: 10px;">
+                <label style="margin:0;"><input type="checkbox" id="fm_custom_on" onchange="toggleCustomFM(this)"> CUSTOM FM</label>
+                <select id="fm_mod_wave" onchange="setModWave(this)" disabled style="background:#333; color:#fff; border:1px solid #666; padding: 5px;">
+                    <option value="0">SIN</option>
+                    <option value="1">TRI</option>
+                    <option value="2">SAW</option>
+                    <option value="3">SQR</option>
+                </select>
+            </div>
+
+            <div id="fm_controls" class="hidden" style="display: flex; gap: 10px; margin-top: 10px;">
                 <div class="control" style="flex: 1;">
                     <label>FM RATIO: <span id="fm_ratioVal">2.0</span></label>
                     <input type="range" id="fm_ratio" min="0.1" max="10.0" value="2.0" step="0.1">
@@ -157,7 +169,7 @@
             <div class="section-title">FILTER (MOOG)</div>
             <div class="control">
                 <label>CUTOFF: <span id="cutoffVal">20000</span> Hz</label>
-                <input type="range" id="cutoff" min="100" max="10000" value="10000" step="10">
+                <input type="range" id="cutoff" min="100" max="10000" value="20000" step="10">
             </div>
             <div class="control">
                 <label>RESONANCE: <span id="resVal">0.0</span></label>
@@ -171,7 +183,7 @@
             <div class="fx-row">
                 <button id="chorusBtn" onclick="toggleChorus()">CHORUS</button>
                 <button id="delayBtn" onclick="toggleDelay()">DELAY</button>
-                <button id="verbBtn" onclick="toggleReverb()" class="active">REVERB</button>
+                <button id="verbBtn" onclick="toggleReverb()">REVERB</button>
             </div>
             
             <div class="control" style="margin-top: 10px;">
@@ -221,7 +233,11 @@
             fm_ratioVal: document.getElementById('fm_ratioVal'),
             fm_indexVal: document.getElementById('fm_indexVal'),
             
-            status: document.getElementById('status')
+            status: document.getElementById('status'),
+            
+            fm_controls: document.getElementById('fm_controls'),
+            fm_custom_on: document.getElementById('fm_custom_on'),
+            fm_mod_wave: document.getElementById('fm_mod_wave')
         };
         
         let socket;
@@ -232,8 +248,38 @@
             socket.onopen = () => {
                 els.status.textContent = "ONLINE";
                 els.status.style.color = "#ff9900";
+                syncState(); // Sync UI to DSP
             };
             socket.onclose = () => setTimeout(connect, 2000);
+        }
+
+        // Send all current UI values to the DSP
+        function syncState() {
+            console.log("Syncing state...");
+            // Sliders
+            send('drive', els.drive.value);
+            send('cutoff', els.cutoff.value);
+            send('res', els.res.value);
+            send('dtime', els.dtime.value);
+            send('dfeed', els.dfeed.value);
+            send('amp', els.amp.value);
+            send('fm_ratio', els.fm_ratio.value);
+            send('fm_index', els.fm_index.value);
+            
+            // Toggles (Read button classes or explicit state)
+            const isRev = document.getElementById('verbBtn').classList.contains('active');
+            const isCho = document.getElementById('chorusBtn').classList.contains('active');
+            const isDel = document.getElementById('delayBtn').classList.contains('active');
+            send('reverb', isRev ? 1 : 0);
+            send('chorus', isCho ? 1 : 0);
+            send('delay', isDel ? 1 : 0);
+            
+            // Waveform (Global var)
+            send('wave', currentWave);
+            
+            // Custom FM
+            send('fm_enable', els.fm_custom_on.checked ? 1 : 0);
+            send('mod_wave', els.fm_mod_wave.value);
         }
 
         function send(cmd, val) {
@@ -263,10 +309,35 @@
         bind('fm_ratio', 'fm_ratio');
         bind('fm_index', 'fm_index');
 
+        let currentWave = 'sine';
+
+        function updateFmVisibility() {
+            const isFmWave = (currentWave === 'fm');
+            const isCustomFm = els.fm_custom_on.checked;
+            
+            if (isFmWave || isCustomFm) {
+                els.fm_controls.classList.remove('hidden');
+            } else {
+                els.fm_controls.classList.add('hidden');
+            }
+        }
+
         window.setWave = (type, btn) => {
             document.querySelectorAll('#waveforms button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            currentWave = type;
+            updateFmVisibility();
             send('wave', type);
+        };
+
+        window.toggleCustomFM = (cb) => {
+            els.fm_mod_wave.disabled = !cb.checked;
+            updateFmVisibility();
+            send('fm_enable', cb.checked ? 1 : 0);
+        };
+
+        window.setModWave = (sel) => {
+            send('mod_wave', sel.value);
         };
 
         const toggleFx = (btnId, cmd, startState) => {
@@ -276,29 +347,37 @@
                 btn.classList.toggle('active', state);
                 send(cmd, state ? 1 : 0);
             };
-            // update(); // Set initial
+            // update(); // Set initial (Assuming defaults are OFF in UI)
             return () => { state = !state; update(); };
         };
 
-        window.toggleReverb = toggleFx('verbBtn', 'reverb', true);
+        // Defaults are FALSE now
+        window.toggleReverb = toggleFx('verbBtn', 'reverb', false);
         window.toggleChorus = toggleFx('chorusBtn', 'chorus', false);
         window.toggleDelay  = toggleFx('delayBtn', 'delay', false);
 
         // --- KEYBOARD LOGIC ---
+        // Standard "QWERTY Piano" mapping (Ableton/Logic style)
+        // Base Note: C4 (MIDI 60)
         const keys = [
             { note: 60, key: 'a', type: 'white' }, // C4
-            { note: 61, key: 'w', type: 'black' }, // C#
-            { note: 62, key: 's', type: 'white' }, // D
-            { note: 63, key: 'e', type: 'black' }, // D#
-            { note: 64, key: 'd', type: 'white' }, // E
-            { note: 65, key: 'f', type: 'white' }, // F
-            { note: 66, key: 't', type: 'black' }, // F#
-            { note: 67, key: 'g', type: 'white' }, // G
-            { note: 68, key: 'y', type: 'black' }, // G#
-            { note: 69, key: 'h', type: 'white' }, // A
-            { note: 70, key: 'u', type: 'black' }, // A#
-            { note: 71, key: 'j', type: 'white' }, // B
+            { note: 61, key: 'w', type: 'black' }, // C#4
+            { note: 62, key: 's', type: 'white' }, // D4
+            { note: 63, key: 'e', type: 'black' }, // D#4
+            { note: 64, key: 'd', type: 'white' }, // E4
+            { note: 65, key: 'f', type: 'white' }, // F4
+            { note: 66, key: 't', type: 'black' }, // F#4
+            { note: 67, key: 'g', type: 'white' }, // G4
+            { note: 68, key: 'y', type: 'black' }, // G#4
+            { note: 69, key: 'h', type: 'white' }, // A4
+            { note: 70, key: 'u', type: 'black' }, // A#4
+            { note: 71, key: 'j', type: 'white' }, // B4
             { note: 72, key: 'k', type: 'white' }, // C5
+            { note: 73, key: 'o', type: 'black' }, // C#5
+            { note: 74, key: 'l', type: 'white' }, // D5
+            { note: 75, key: 'p', type: 'black' }, // D#5
+            { note: 76, key: ';', type: 'white' }, // E5
+            { note: 77, key: '\'', type: 'white' } // F5
         ];
 
         const kbEl = document.getElementById('kb');
