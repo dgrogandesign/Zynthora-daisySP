@@ -42,7 +42,13 @@ struct Engine {
     MoogLadder flt;
     ReverbSc   verb;
     Overdrive  drive;
-    Chorus     chorus;
+    Chorus     chorus; // Legacy DaisySP Chorus
+    
+    // Chorus 2 (Custom)
+    DelayLine<float, 4800> choDelayL; // ~100ms buffer
+    DelayLine<float, 4800> choDelayR;
+    Oscillator choLfo;
+
     DelayLine<float, DELAY_MAX_SAMPLES> delL;
     DelayLine<float, DELAY_MAX_SAMPLES> delR;
 
@@ -53,6 +59,7 @@ struct Engine {
     
     // Effects State
     bool  chorusOn   = false;
+    bool  chorus2On  = false; // New Custom Chorus
     float chorusRate = 0.3f;
     float chorusDepth= 0.8f;
     
@@ -87,6 +94,15 @@ struct Engine {
         env.SetTime(ADSR_SEG_RELEASE, 0.2f);
         drive.Init();
         chorus.Init(sampleRate);
+        
+        // Init Chorus 2
+        choDelayL.Init();
+        choDelayR.Init();
+        choLfo.Init(sampleRate);
+        choLfo.SetWaveform(Oscillator::WAVE_SIN);
+        choLfo.SetFreq(0.5f);
+        choLfo.SetAmp(1.0f);
+
         delL.Init();
         delR.Init();
     }
@@ -186,6 +202,7 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
                     case 310: 
                         g_engine.chorusRate = evt.value; 
                         g_engine.chorus.SetLfoFreq(evt.value);
+                        g_engine.choLfo.SetFreq(evt.value); // Update custom LFO too
                         std::cout << "CMD: Chorus Rate " << evt.value << std::endl;
                         break;
                     case 311: 
@@ -254,11 +271,32 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
         float left = sig;
         float right = sig;
 
-        // Chorus
+        // Chorus (Custom "Chorus2" Implementation)
         if (g_engine.chorusOn) {
-            g_engine.chorus.Process(left);
-            left = g_engine.chorus.GetLeft() * 1.4f; 
-            right = g_engine.chorus.GetRight() * 1.4f;
+            // 1. Write to Delay
+            g_engine.choDelayL.Write(left);
+            g_engine.choDelayR.Write(right);
+            
+            // 2. Calculate LFO
+            // Sine LFO (-0.5 to 0.5)
+            float lfo = g_engine.choLfo.Process(); 
+            
+            // 3. Modulate Delay Time (10ms to 30ms)
+            // Base = 20ms (960 samples @ 48k)
+            // Swing = +/- 10ms * depth
+            float baseDelay = 960.0f; 
+            float swing = 480.0f * g_engine.chorusDepth;
+            
+            float modL = baseDelay + (lfo * swing);
+            float modR = baseDelay + (-lfo * swing); // Stereo phase inverted LFO
+            
+            // 4. Read Interpolated
+            float wetL = g_engine.choDelayL.Read(modL);
+            float wetR = g_engine.choDelayR.Read(modR);
+            
+            // 5. Mix (50/50)
+            left = (left + wetL) * 0.707f;
+            right = (right + wetR) * 0.707f;
         }
 
         // Delay
