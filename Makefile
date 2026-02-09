@@ -1,27 +1,8 @@
 CC = g++
+CFLAGS = -I. -IDaisySP/Source -IDaisySP/Source/Control -IDaisySP/Source/Drums -IDaisySP/Source/Dynamics -IDaisySP/Source/Effects -IDaisySP/Source/Filters -IDaisySP/Source/Noise -IDaisySP/Source/PhysicalModeling -IDaisySP/Source/Sampling -IDaisySP/Source/Synthesis -IDaisySP/Source/Utility -IDaisySP/DaisySP-LGPL/Source -IDaisySP/DaisySP-LGPL/Source/Effects -IDaisySP/DaisySP-LGPL/Source/Filters -O2 -Wall -D__LINUX_ALSA__ -pipe --param ggc-min-expand=10 --param ggc-min-heapsize=8192
+LIBS = -lpthread -ldl -lm -lasound
 
-# Include all subdirectories of DaisySP/Source and DaisySP-LGPL/Source
-INCLUDES = -I. -Isrc \
-	-IDaisySP/Source \
-	-IDaisySP/Source/Control \
-	-IDaisySP/Source/Drums \
-	-IDaisySP/Source/Dynamics \
-	-IDaisySP/Source/Effects \
-	-IDaisySP/Source/Filters \
-	-IDaisySP/Source/Noise \
-	-IDaisySP/Source/PhysicalModeling \
-	-IDaisySP/Source/Sampling \
-	-IDaisySP/Source/Synthesis \
-	-IDaisySP/Source/Utility \
-	-IDaisySP/DaisySP-LGPL/Source \
-	-IDaisySP/DaisySP-LGPL/Source/Effects \
-	-IDaisySP/DaisySP-LGPL/Source/Filters
-
-CFLAGS = $(INCLUDES) -O3 -Wall -D__LINUX_ALSA__
-LIBS = -lpthread -ldl -lm
-
-# DaisySP Sources (Main Library)
-DAISY_SRCS = \
+SRCS_CPP = main.cpp \
 	DaisySP/Source/Control/adenv.cpp \
 	DaisySP/Source/Control/adsr.cpp \
 	DaisySP/Source/Control/phasor.cpp \
@@ -31,22 +12,25 @@ DAISY_SRCS = \
 	DaisySP/Source/Filters/svf.cpp \
 	DaisySP/Source/Synthesis/oscillator.cpp \
 	DaisySP/Source/Synthesis/variablesawosc.cpp \
-	DaisySP/Source/Synthesis/fm2.cpp \
 	DaisySP/Source/Utility/metro.cpp \
-	DaisySP/Source/Utility/dcblock.cpp
-
-# DaisySP LGPL Sources (Reverb, Moog Filter)
-DAISY_LGPL_SRCS = \
+	DaisySP/Source/Utility/dcblock.cpp \
 	DaisySP/DaisySP-LGPL/Source/Effects/reverbsc.cpp \
 	DaisySP/DaisySP-LGPL/Source/Filters/moogladder.cpp
 
-# Main Sources
-SRCS = src/main.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS)
+SRCS_C = mongoose.c
+
+OBJS = $(SRCS_CPP:.cpp=.o) $(SRCS_C:.c=.o)
 
 all: zynthora
 
-zynthora: $(SRCS)
-	$(CC) $(CFLAGS) $(SRCS) -o zynthora $(LIBS)
+zynthora: $(OBJS)
+	$(CC) $(OBJS) -o zynthora $(LIBS)
+
+.cpp.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f zynthora
+	rm -f zynthora $(OBJS)
