@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,8 +20,13 @@
             touch-action: none;
             user-select: none;
         }
-        h1 { border-bottom: 2px solid #ff9900; padding-bottom: 0.5rem; margin-top: 0; }
-        
+
+        h1 {
+            border-bottom: 2px solid #ff9900;
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
         .panel {
             background: #222;
             border: 1px solid #444;
@@ -31,7 +37,7 @@
             display: grid;
             gap: 1.5rem;
         }
-        
+
         .section-title {
             color: #888;
             font-size: 0.8rem;
@@ -41,12 +47,27 @@
             margin-bottom: 10px;
         }
 
-        .control { }
-        label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; }
-        
-        input[type=range] { width: 100%; accent-color: #ff9900; cursor: pointer; }
-        
-        .btn-group { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+        .control {}
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: #ff9900;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         button {
             background: #333;
             color: #fff;
@@ -57,14 +78,18 @@
             font-size: 0.8rem;
             flex: 1;
         }
+
         button.active {
             background: #ff9900;
             color: #000;
             border-color: #ff9900;
         }
-        
-        .fx-row { display: flex; gap: 10px; }
-        
+
+        .fx-row {
+            display: flex;
+            gap: 10px;
+        }
+
         /* KEYBOARD STYLES */
         .keyboard {
             display: flex;
@@ -73,6 +98,7 @@
             margin-top: 10px;
             height: 120px;
         }
+
         .key {
             background: #fff;
             border-radius: 0 0 4px 4px;
@@ -80,6 +106,7 @@
             position: relative;
             cursor: pointer;
         }
+
         .key.black {
             background: #000;
             color: #fff;
@@ -90,14 +117,17 @@
             z-index: 2;
             border: 1px solid #333;
         }
+
         .key.white {
             height: 100%;
             z-index: 1;
             border: 1px solid #ccc;
         }
+
         .key.active {
             background: #ff9900 !important;
         }
+
         .key span {
             position: absolute;
             bottom: 5px;
@@ -108,22 +138,25 @@
             font-size: 0.7rem;
             pointer-events: none;
         }
-        
+
         #status {
             margin-top: 1rem;
             color: #666;
             font-size: 0.8rem;
             text-align: center;
         }
-        
-        .hidden { display: none !important; }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
+
 <body>
     <h1>ZYNTHORA FM</h1>
-    
+
     <div class="panel">
-        
+
         <!-- OSCILLATOR -->
         <div>
             <div class="section-title">SOURCE</div>
@@ -134,17 +167,29 @@
                     <button onclick="setWave('saw', this)">SAW</button>
                     <button onclick="setWave('square', this)">SQR</button>
                     <button onclick="setWave('fm', this)">FM</button>
+                    <button onclick="setWave('wavetable', this)">WT</button>
                 </div>
             </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; border-top: 1px solid #333; padding-top: 10px;">
-                <label style="margin:0;"><input type="checkbox" id="fm_custom_on" onchange="toggleCustomFM(this)"> CUSTOM FM</label>
-                <select id="fm_mod_wave" onchange="setModWave(this)" disabled style="background:#333; color:#fff; border:1px solid #666; padding: 5px;">
+
+            <div
+                style="display: flex; gap: 10px; margin-top: 10px; align-items: center; border-top: 1px solid #333; padding-top: 10px;">
+                <label style="margin:0;"><input type="checkbox" id="fm_custom_on" onchange="toggleCustomFM(this)">
+                    CUSTOM FM</label>
+                <select id="fm_mod_wave" onchange="setModWave(this)" disabled
+                    style="background:#333; color:#fff; border:1px solid #666; padding: 5px;">
                     <option value="0">SIN</option>
                     <option value="1">TRI</option>
                     <option value="2">SAW</option>
                     <option value="3">SQR</option>
                 </select>
+            </div>
+
+            <!-- WAVETABLE CONTROLS -->
+            <div id="wt_controls" class="hidden" style="margin-top: 10px;">
+                <div class="control">
+                    <label>WAVE MORPH: <span id="wt_indexVal">0.00</span></label>
+                    <input type="range" id="wt_index" min="0" max="63" value="0" step="0.01">
+                </div>
             </div>
 
             <div id="fm_controls" class="hidden" style="display: flex; gap: 10px; margin-top: 10px;">
@@ -185,9 +230,10 @@
                 <button id="delayBtn" onclick="toggleDelay()">DELAY</button>
                 <button id="verbBtn" onclick="toggleReverb()">REVERB</button>
             </div>
-            
+
             <!-- DELAY CONTROLS -->
-            <div id="delay_controls" class="hidden" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+            <div id="delay_controls" class="hidden"
+                style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
                 <div class="control">
                     <label>DELAY TIME: <span id="dtimeVal">0.3</span>s</label>
                     <input type="range" id="dtime" min="0.05" max="0.9" value="0.3" step="0.01">
@@ -199,7 +245,8 @@
             </div>
 
             <!-- CHORUS CONTROLS -->
-            <div id="chorus_controls" class="hidden" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+            <div id="chorus_controls" class="hidden"
+                style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
                 <div class="control">
                     <label>CHORUS RATE: <span id="crateVal">0.3</span>Hz</label>
                     <input type="range" id="crate" min="0.1" max="5.0" value="0.3" step="0.1">
@@ -211,7 +258,8 @@
             </div>
 
             <!-- REVERB CONTROLS -->
-            <div id="reverb_controls" class="hidden" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+            <div id="reverb_controls" class="hidden"
+                style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
                 <div class="control">
                     <label>REVERB DECAY: <span id="rtimeVal">0.85</span></label>
                     <input type="range" id="rtime" min="0.3" max="0.99" value="0.85" step="0.01">
@@ -228,7 +276,7 @@
             <label>MASTER VOL: <span id="ampVal">0.5</span></label>
             <input type="range" id="amp" min="0" max="1" value="0.5" step="0.01">
         </div>
-        
+
         <!-- KEYBOARD -->
         <div>
             <div class="section-title">KEYBOARD (A-K = White Keys)</div>
@@ -236,7 +284,7 @@
                 <!-- Generated by JS -->
             </div>
         </div>
-        
+
         <div id="status">Connecting...</div>
     </div>
 
@@ -245,45 +293,52 @@
             drive: document.getElementById('drive'),
             cutoff: document.getElementById('cutoff'),
             res: document.getElementById('res'),
-            
+
             dtime: document.getElementById('dtime'),
             dfeed: document.getElementById('dfeed'),
             crate: document.getElementById('crate'),
             cdepth: document.getElementById('cdepth'),
             rtime: document.getElementById('rtime'),
             rtone: document.getElementById('rtone'),
-            
+
             amp: document.getElementById('amp'),
             fm_ratio: document.getElementById('fm_ratio'),
+            fm_ratio: document.getElementById('fm_ratio'),
             fm_index: document.getElementById('fm_index'),
-            
+            wt_index: document.getElementById('wt_index'),
+
+
             driveVal: document.getElementById('driveVal'),
             cutoffVal: document.getElementById('cutoffVal'),
             resVal: document.getElementById('resVal'),
-            
+
             dtimeVal: document.getElementById('dtimeVal'),
             dfeedVal: document.getElementById('dfeedVal'),
             crateVal: document.getElementById('crateVal'),
             cdepthVal: document.getElementById('cdepthVal'),
             rtimeVal: document.getElementById('rtimeVal'),
             rtoneVal: document.getElementById('rtoneVal'),
-            
+
             ampVal: document.getElementById('ampVal'),
             fm_ratioVal: document.getElementById('fm_ratioVal'),
             fm_indexVal: document.getElementById('fm_indexVal'),
-            
+            wt_indexVal: document.getElementById('wt_indexVal'),
+
+
             status: document.getElementById('status'),
-            
+
             fm_controls: document.getElementById('fm_controls'),
             fm_custom_on: document.getElementById('fm_custom_on'),
             fm_mod_wave: document.getElementById('fm_mod_wave'),
-            
+            wt_controls: document.getElementById('wt_controls'),
+
+
             // FX Panels
             delay_controls: document.getElementById('delay_controls'),
             chorus_controls: document.getElementById('chorus_controls'),
             reverb_controls: document.getElementById('reverb_controls')
         };
-        
+
         let socket;
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -304,24 +359,27 @@
             send('drive', els.drive.value);
             send('cutoff', els.cutoff.value);
             send('res', els.res.value);
-            
+
             send('dtime', els.dtime.value);
             send('dfeed', els.dfeed.value);
             send('chorus_rate', els.crate.value);
             send('chorus_depth', els.cdepth.value);
             send('reverb_time', els.rtime.value);
             send('reverb_tone', els.rtone.value);
-            
+
             send('amp', els.amp.value);
             send('fm_ratio', els.fm_ratio.value);
+            send('fm_ratio', els.fm_ratio.value);
             send('fm_index', els.fm_index.value);
-            
+            send('wt_index', els.wt_index.value);
+
+
             // Toggles
             updateFxState();
-            
+
             // Waveform
             send('wave', currentWave);
-            
+
             // Custom FM
             send('fm_enable', els.fm_custom_on.checked ? 1 : 0);
             send('mod_wave', els.fm_mod_wave.value);
@@ -357,31 +415,40 @@
         bind('amp', 'amp');
         bind('fm_ratio', 'fm_ratio');
         bind('fm_index', 'fm_index');
+        bind('wt_index', 'wt_index');
 
         let currentWave = 'sine';
 
-        function updateFmVisibility() {
+        function updateVisibility() {
             const isFmWave = (currentWave === 'fm');
             const isCustomFm = els.fm_custom_on.checked;
-            
+            const isWt = (currentWave === 'wavetable');
+
             if (isFmWave || isCustomFm) {
                 els.fm_controls.classList.remove('hidden');
             } else {
                 els.fm_controls.classList.add('hidden');
+            }
+
+            if (isWt) {
+                els.wt_controls.classList.remove('hidden');
+            } else {
+                els.wt_controls.classList.add('hidden');
             }
         }
 
         window.setWave = (type, btn) => {
             document.querySelectorAll('#waveforms button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            btn.classList.add('active');
             currentWave = type;
-            updateFmVisibility();
+            updateVisibility();
             send('wave', type);
         };
 
         window.toggleCustomFM = (cb) => {
             els.fm_mod_wave.disabled = !cb.checked;
-            updateFmVisibility();
+            updateVisibility();
             send('fm_enable', cb.checked ? 1 : 0);
         };
 
@@ -392,7 +459,7 @@
         const toggleFx = (btnId, panelId, cmd) => {
             const btn = document.getElementById(btnId);
             const panel = document.getElementById(panelId);
-            
+
             // Initial state check (for defaults)
             if (btn.classList.contains('active')) {
                 panel.classList.remove('hidden');
@@ -407,20 +474,20 @@
                 send(cmd, isActive ? 1 : 0);
             };
         };
-        
+
         // Helper to just send current state of buttons
         function updateFxState() {
-             const isRev = document.getElementById('verbBtn').classList.contains('active');
-             const isCho = document.getElementById('chorusBtn').classList.contains('active');
-             const isDel = document.getElementById('delayBtn').classList.contains('active');
-             send('reverb', isRev ? 1 : 0);
-             send('chorus', isCho ? 1 : 0);
-             send('delay', isDel ? 1 : 0);
+            const isRev = document.getElementById('verbBtn').classList.contains('active');
+            const isCho = document.getElementById('chorusBtn').classList.contains('active');
+            const isDel = document.getElementById('delayBtn').classList.contains('active');
+            send('reverb', isRev ? 1 : 0);
+            send('chorus', isCho ? 1 : 0);
+            send('delay', isDel ? 1 : 0);
         }
 
         window.toggleReverb = toggleFx('verbBtn', 'reverb_controls', 'reverb');
         window.toggleChorus = toggleFx('chorusBtn', 'chorus_controls', 'chorus');
-        window.toggleDelay  = toggleFx('delayBtn', 'delay_controls', 'delay');
+        window.toggleDelay = toggleFx('delayBtn', 'delay_controls', 'delay');
 
         // --- KEYBOARD LOGIC ---
         // Standard "QWERTY Piano" mapping (Ableton/Logic style)
@@ -452,17 +519,17 @@
             div.className = `key ${k.type}`;
             div.id = `key-${k.key}`;
             div.innerHTML = `<span>${k.key.toUpperCase()}</span>`;
-            
+
             // Mouse/Touch Events
             const down = (e) => { e.preventDefault(); playNote(k.note, div); };
             const up = (e) => { e.preventDefault(); stopNote(div); };
-            
+
             div.addEventListener('mousedown', down);
             div.addEventListener('mouseup', up);
             div.addEventListener('mouseleave', up);
             div.addEventListener('touchstart', down);
             div.addEventListener('touchend', up);
-            
+
             kbEl.appendChild(div);
         });
 
@@ -471,13 +538,13 @@
         function playNote(note, el) {
             if (activeKey === note) return; // Ignore repeats
             activeKey = note;
-            if(el) el.classList.add('active');
+            if (el) el.classList.add('active');
             send('note', note);
             send('gate', 1);
         }
 
         function stopNote(el) {
-            if(el) el.classList.remove('active');
+            if (el) el.classList.remove('active');
             send('gate', 0);
             activeKey = null;
         }
@@ -500,4 +567,5 @@
         connect();
     </script>
 </body>
+
 </html>
