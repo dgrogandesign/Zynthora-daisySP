@@ -15,7 +15,11 @@ INCLUDES = -I. -Isrc \
 	-IDaisySP/Source/Utility \
 	-IDaisySP/DaisySP-LGPL/Source \
 	-IDaisySP/DaisySP-LGPL/Source/Effects \
-	-IDaisySP/DaisySP-LGPL/Source/Filters
+	-IDaisySP/DaisySP-LGPL/Source/Filters \
+	-Isrc/logue_shim \
+	-Ilogue_units/para_saw \
+	-Isrc/braids \
+	-Isrc/braids/stmlib
 
 CFLAGS = $(INCLUDES) -O3 -Wall -D__LINUX_ALSA__
 LIBS = -lpthread -ldl -lm
@@ -40,8 +44,19 @@ DAISY_LGPL_SRCS = \
 	DaisySP/DaisySP-LGPL/Source/Effects/reverbsc.cpp \
 	DaisySP/DaisySP-LGPL/Source/Filters/moogladder.cpp
 
+# Braids Sources
+BRAIDS_SRCS = \
+	src/braids/analog_oscillator.cc \
+	src/braids/digital_oscillator.cc \
+	src/braids/macro_oscillator.cc \
+	src/braids/quantizer.cc \
+	src/braids/resources.cc \
+	src/braids/stmlib/utils/random.cc \
+	src/braids/stmlib/dsp/atan.cc \
+	src/braids/stmlib/dsp/units.cc
+
 # Main Sources
-SRCS = src/main.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS)
+SRCS = src/main.cpp src/braids_wrapper.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS) $(BRAIDS_SRCS)
 
 all: zynthora
 

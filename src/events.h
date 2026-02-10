@@ -54,7 +54,11 @@ enum ParamID : uint16_t {
     P_MIX_VOL_SYN2    = 901,
     P_MIX_MUTE_SYN1   = 910,
     P_MIX_REV_SEND    = 920, // Global Reverb Send
-    P_MIX_DLY_SEND    = 921  // Global Delay Send
+    P_MIX_DLY_SEND    = 921,  // Global Delay Send
+    
+    // --- WAVETABLE ---
+    P_SYN1_WT_POS     = 140, // Morph Position 0.0 - 1.0 (Reserved)
+    P_SYN1_WT_INDEX   = 141  // Table Index (Select waveform)
 };
 
 // ============================================================================

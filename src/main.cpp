@@ -28,7 +28,89 @@ using namespace daisysp;
 #define DELAY_MAX_SAMPLES 48000
 #define WAVE_FM 100
 #define WAVE_WT 101
+#define WAVE_LOGUE 102
+#define WAVE_BRAIDS 103
 #include "wavetables.h"
+
+// --- Logue SDK Adapter ---
+#include "braids_wrapper.h"
+#include "para_saw.h" // User Unit
+#include "unit_osc.h" // Shim
+
+struct LogueWrapper {
+  Osc logueOsc;
+  unit_runtime_desc_t desc;
+  float paramDetune = 0.0f;
+  int paramOct = 0;
+
+  // Internal state
+  uint8_t lastNote = 255;
+
+  void Init(float sr) {
+    // Setup mock descriptor
+    desc.target = 0;
+    desc.api = 0;
+    desc.samplerate = 48000;
+    desc.input_channels = 2;
+    desc.output_channels = 1;
+    desc.hooks = nullptr;
+
+    logueOsc.Init(&desc);
+    logueOsc.Reset();
+  }
+
+  void SetFreq(float freq) {
+    // Korg oscillators usually track note/pitch internally via NoteOn/Off
+    // usage in Process().
+    // However, `para_saw` uses `NoteOn` events to set base pitch.
+    // We will map our mono-synth logic to this.
+
+    float midiNote = 69.0f + 12.0f * log2f(freq / 440.0f);
+    uint8_t noteInt = (uint8_t)(midiNote + 0.5f); // Round to nearest semitone
+
+    // Retrigger if note changed significantly?
+    // For now, para_saw might expect NoteOn for pitch.
+    // Let's just update the internal state if needed, or rely on Process().
+    // *Correction*: para_saw uses `osc_w0f_for_note` in Process loop based on
+    // `voice[i].note`. So we MUST call NoteOn to set the pitch.
+
+    if (noteInt != lastNote) {
+      std::cout << "LOGUE ON: " << (int)noteInt << std::endl;
+      logueOsc.NoteOn(noteInt, 100);
+      lastNote = noteInt;
+    }
+  }
+
+  void NoteOff(uint8_t note) {
+    std::cout << "LOGUE OFF: " << (int)note << std::endl;
+    logueOsc.NoteOff(note); // Tell Logue engine to release this specific voice
+  }
+
+  // Map Detune (0.0 - 1.0) -> Detune (0-1023)
+  void SetDetune(float val) {
+    int32_t korgVal = (int32_t)(val * 1023.0f);
+    logueOsc.setParameter(Osc::DETUNE, korgVal);
+  }
+
+  // Map Sub/Oct (-1 to 1) -> Oct (-2 to 2)
+  void SetOctave(int val) { logueOsc.setParameter(Osc::OCT, val); }
+
+  float Process() {
+    // Logue Process works in blocks. We are processing sample-by-sample here.
+    // This is inefficient but compatible.
+    float in[2] = {0.0f, 0.0f};
+    float out[1] = {0.0f};
+
+    logueOsc.Process(in, out, 1);
+    return out[0];
+  }
+
+  void ResetVoices() {
+    // Clear all voices and reset note tracking
+    logueOsc.AllNoteOff();
+    lastNote = 255;
+  }
+};
 
 // ============================================================================
 // CUSTOM WAVETABLE OSCILLATOR (No Library Class Available)
@@ -108,8 +190,10 @@ struct Engine {
   MoogLadder flt;
   ReverbSc verb;
   Overdrive drive;
-  Chorus chorus;   // Legacy DaisySP Chorus
-  WavetableOsc wt; // NEW Wavetable Engine
+  Chorus chorus;        // Legacy DaisySP Chorus
+  WavetableOsc wt;      // NEW Wavetable Engine
+  LogueWrapper logue;   // Custom Logue Adapter
+  BraidsWrapper braids; // Braids Engine
 
   // Chorus 2 (Custom)
   DelayLine<float, 4800> choDelayL; // ~100ms buffer
@@ -137,6 +221,7 @@ struct Engine {
   bool delayOn = false;
   float delayFeed = 0.4f;
   bool gate = false;
+  int activeNoteCount = 0;
   float baseFreq = 440.0f; // Stored pitch for FM calculation
 
   // Custom FM State
@@ -162,6 +247,8 @@ struct Engine {
     drive.Init();
     chorus.Init(sampleRate);
     wt.Init(sampleRate);
+    logue.Init(sampleRate);
+    braids.Init(sampleRate);
 
     // Init Chorus 2
     choDelayL.Init();
@@ -193,10 +280,28 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
     switch (evt.type) {
     case TYPE_NOTE_ON:
       // Note On typically implies setting freq + gate
+      if (g_engine.activeNoteCount == 0 || !g_engine.gate) {
+        // New phrase: Clear old voices (fixes Muddy Drone)
+        g_engine.logue.ResetVoices();
+      }
+      g_engine.activeNoteCount++;
       g_engine.gate = true;
+
+      // Force update freq to ensure Logue triggers even if Note event came
+      // early/late or if ResetVoices cleared it.
+      g_engine.logue.SetFreq(g_engine.baseFreq);
       break;
     case TYPE_NOTE_OFF:
-      g_engine.gate = false;
+      if (g_engine.activeNoteCount > 0) {
+        g_engine.activeNoteCount--;
+      }
+
+      // Always tell Logue to release this note
+      g_engine.logue.NoteOff((uint8_t)evt.id);
+
+      if (g_engine.activeNoteCount == 0) {
+        g_engine.gate = false;
+      }
       break;
     case TYPE_PARAM_CHANGE:
       switch (evt.id) {
@@ -207,6 +312,8 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
         g_engine.fm.SetFrequency(evt.value);
         g_engine.mod.SetFreq(evt.value * g_engine.modRatio);
         g_engine.wt.SetFreq(evt.value);
+        g_engine.logue.SetFreq(evt.value); // FIX: Send freq to Logue
+        g_engine.braids.SetFreq(evt.value);
         break;
       case P_SYN1_OSC_WAVE:
         g_engine.waveform = (int)evt.value;
@@ -259,6 +366,14 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
         g_engine.wt.SetMorph(evt.value);
         // Limit log spam for continuous slider
         // std::cout << "CMD: WT Morph " << evt.value << std::endl;
+        break;
+
+      // --- LOGUE PARAPHONIC ---
+      case 220: // Logue Detune
+        g_engine.logue.SetDetune(evt.value);
+        break;
+      case 221: // Logue Octave
+        g_engine.logue.SetOctave((int)evt.value);
         break;
 
       // --- EFFECTS TOGGLES ---
@@ -326,6 +441,11 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
     } else if (g_engine.waveform == WAVE_WT) {
       // Wavetable Engine
       sig = g_engine.wt.Process();
+    } else if (g_engine.waveform == WAVE_LOGUE) {
+      // Logue SDK Engine
+      sig = g_engine.logue.Process();
+    } else if (g_engine.waveform == WAVE_BRAIDS) {
+      sig = g_engine.braids.Process();
     } else {
       // Standard Oscillator + Custom FM
       if (g_engine.customFmOn) {
@@ -475,6 +595,10 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
             waveVal = (float)WAVE_FM;
           else if (valStr == "wavetable")
             waveVal = (float)WAVE_WT;
+          else if (valStr == "logue")
+            waveVal = (float)WAVE_LOGUE;
+          else if (valStr == "braids")
+            waveVal = (float)WAVE_BRAIDS;
           send_param(P_SYN1_OSC_WAVE, waveVal);
           return;
         }
@@ -490,12 +614,43 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
           evt.source_id = SRC_GUI_MAIN;
           evt.type = (val > 0.5f) ? TYPE_NOTE_ON : TYPE_NOTE_OFF;
           g_eventQueue.push(evt);
+        } else if (cmd == "off") {
+          // Specific Note Off
+          // We reuse send_note_off but pass ID
+          SynthEvent e;
+          e.source_id = SRC_GUI_MAIN;
+          e.type = TYPE_NOTE_OFF;
+          e.id = (uint16_t)val; // Pass Note Number
+          e.value = 0.0f;
+          g_eventQueue.push(e);
         } else if (cmd == "freq")
           send_param(P_SYN1_OSC_FREQ, val);
 
         // Wavetable Commands
         else if (cmd == "wt_index")
           send_param(P_SYN1_WT_INDEX, val);
+
+        // Logue Commands
+        else if (cmd == "logue_detune")
+          send_param(220, val);
+        else if (cmd == "logue_oct")
+          send_param(221, val);
+
+        // Braids Commands
+        else if (cmd == "braids_model")
+          g_engine.braids.SetModel((int)val); // Direct call for now
+        else if (cmd == "braids_timbre")
+          g_engine.braids.SetTimbre(val);
+        else if (cmd == "braids_color")
+          g_engine.braids.SetColor(val);
+        else if (cmd == "braids_fine")
+          g_engine.braids.SetFine(val);
+        else if (cmd == "braids_coarse")
+          g_engine.braids.SetCoarse(val);
+        else if (cmd == "braids_fm")
+          g_engine.braids.SetFM(val);
+        else if (cmd == "braids_modulation")
+          g_engine.braids.SetModulation(val);
 
         else if (cmd == "amp")
           send_param(999, val);

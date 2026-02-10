@@ -168,6 +168,8 @@
                     <button onclick="setWave('square', this)">SQR</button>
                     <button onclick="setWave('fm', this)">FM</button>
                     <button onclick="setWave('wavetable', this)">WT</button>
+                    <button onclick="setWave('braids', this)">BRAIDS</button>
+                    <button onclick="setWave('logue', this)">LOGUE</button>
                 </div>
             </div>
 
@@ -179,9 +181,51 @@
                     style="background:#333; color:#fff; border:1px solid #666; padding: 5px;">
                     <option value="0">SIN</option>
                     <option value="1">TRI</option>
+                    <option value="100">FM</option>
+                    <option value="101">Wavetable</option>
+                    <option value="102">Logue Saw (Paraphonic)</option>
                     <option value="2">SAW</option>
                     <option value="3">SQR</option>
                 </select>
+            </div>
+
+            <!-- Braids CONTROLS -->
+            <div id="braids_controls" class="hidden"
+                style="margin-top: 10px; border-top: 1px dashed #555; padding-top: 10px;">
+                <div class="control">
+                    <label>EDIT (MODEL): <span id="braids_modelVal">0</span></label>
+                    <input type="range" id="braids_model" min="0" max="47" value="0" step="1">
+                </div>
+                <div class="fx-row">
+                    <div class="control" style="flex:1">
+                        <label>FINE: <span id="braids_fineVal">0.00</span></label>
+                        <input type="range" id="braids_fine" min="-1.0" max="1.0" value="0.0" step="0.01">
+                    </div>
+                    <div class="control" style="flex:1">
+                        <label>COARSE: <span id="braids_coarseVal">0.00</span></label>
+                        <input type="range" id="braids_coarse" min="-24" max="24" value="0" step="1">
+                    </div>
+                </div>
+                <div class="fx-row">
+                    <div class="control" style="flex:1">
+                        <label>FM: <span id="braids_fmVal">0.00</span></label>
+                        <input type="range" id="braids_fm" min="0.0" max="1.0" value="0.0" step="0.01">
+                    </div>
+                    <div class="control" style="flex:1">
+                        <label>TIMBRE: <span id="braids_timbreVal">0.00</span></label>
+                        <input type="range" id="braids_timbre" min="0.0" max="1.0" value="0.0" step="0.01">
+                    </div>
+                </div>
+                <div class="fx-row">
+                    <div class="control" style="flex:1">
+                        <label>MOD: <span id="braids_modulationVal">0.00</span></label>
+                        <input type="range" id="braids_modulation" min="0.0" max="1.0" value="0.0" step="0.01">
+                    </div>
+                    <div class="control" style="flex:1">
+                        <label>COLOR: <span id="braids_colorVal">0.00</span></label>
+                        <input type="range" id="braids_color" min="0.0" max="1.0" value="0.0" step="0.01">
+                    </div>
+                </div>
             </div>
 
             <!-- WAVETABLE CONTROLS -->
@@ -189,6 +233,19 @@
                 <div class="control">
                     <label>WAVE MORPH: <span id="wt_indexVal">0.00</span></label>
                     <input type="range" id="wt_index" min="0" max="63" value="0" step="0.01">
+                </div>
+            </div>
+
+            <!-- LOGUE CONTROLS -->
+            <div id="logue_controls" class="hidden"
+                style="margin-top: 10px; border-top: 1px dashed #555; padding-top: 10px;">
+                <div class="control">
+                    <label>DETUNE: <span id="logue_detuneVal">0.00</span></label>
+                    <input type="range" id="logue_detune" min="0" max="1" value="0" step="0.01">
+                </div>
+                <div class="control">
+                    <label>OCTAVE: <span id="logue_octVal">0</span></label>
+                    <input type="range" id="logue_oct" min="-3" max="3" value="0" step="1">
                 </div>
             </div>
 
@@ -306,11 +363,44 @@
             fm_ratio: document.getElementById('fm_ratio'),
             fm_index: document.getElementById('fm_index'),
             wt_index: document.getElementById('wt_index'),
+            logue_detune: document.getElementById('logue_detune'),
+            logue_oct: document.getElementById('logue_oct'),
+
+            // BRAIDS
+            braids_controls: document.getElementById('braids_controls'),
+            braids_model: document.getElementById('braids_model'),
+            braids_fine: document.getElementById('braids_fine'),
+            braids_coarse: document.getElementById('braids_coarse'),
+            braids_fm: document.getElementById('braids_fm'),
+            braids_timbre: document.getElementById('braids_timbre'),
+            braids_modulation: document.getElementById('braids_modulation'),
+            braids_color: document.getElementById('braids_color'),
+
+            braids_modelVal: document.getElementById('braids_modelVal'),
+            braids_fineVal: document.getElementById('braids_fineVal'),
+            braids_coarseVal: document.getElementById('braids_coarseVal'),
+            braids_fmVal: document.getElementById('braids_fmVal'),
+            braids_timbreVal: document.getElementById('braids_timbreVal'),
+            braids_modulationVal: document.getElementById('braids_modulationVal'),
+            braids_colorVal: document.getElementById('braids_colorVal'),
 
 
             driveVal: document.getElementById('driveVal'),
             cutoffVal: document.getElementById('cutoffVal'),
             resVal: document.getElementById('resVal'),
+
+            // ... (keeping existing refs)
+            dtime: document.getElementById('dtime'),
+            dfeed: document.getElementById('dfeed'),
+            crate: document.getElementById('crate'),
+            cdepth: document.getElementById('cdepth'),
+            rtime: document.getElementById('rtime'),
+            rtone: document.getElementById('rtone'),
+
+            amp: document.getElementById('amp'),
+            fm_ratio: document.getElementById('fm_ratio'),
+            fm_index: document.getElementById('fm_index'),
+            wt_index: document.getElementById('wt_index'),
 
             dtimeVal: document.getElementById('dtimeVal'),
             dfeedVal: document.getElementById('dfeedVal'),
@@ -323,6 +413,8 @@
             fm_ratioVal: document.getElementById('fm_ratioVal'),
             fm_indexVal: document.getElementById('fm_indexVal'),
             wt_indexVal: document.getElementById('wt_indexVal'),
+            logue_detuneVal: document.getElementById('logue_detuneVal'),
+            logue_octVal: document.getElementById('logue_octVal'),
 
 
             status: document.getElementById('status'),
@@ -331,6 +423,7 @@
             fm_custom_on: document.getElementById('fm_custom_on'),
             fm_mod_wave: document.getElementById('fm_mod_wave'),
             wt_controls: document.getElementById('wt_controls'),
+            logue_controls: document.getElementById('logue_controls'),
 
 
             // FX Panels
@@ -369,9 +462,19 @@
 
             send('amp', els.amp.value);
             send('fm_ratio', els.fm_ratio.value);
-            send('fm_ratio', els.fm_ratio.value);
             send('fm_index', els.fm_index.value);
             send('wt_index', els.wt_index.value);
+            send('logue_detune', els.logue_detune.value);
+            send('logue_oct', els.logue_oct.value);
+
+            // Braids Sync
+            send('braids_model', els.braids_model.value);
+            send('braids_fine', els.braids_fine.value);
+            send('braids_coarse', els.braids_coarse.value);
+            send('braids_fm', els.braids_fm.value);
+            send('braids_timbre', els.braids_timbre.value);
+            send('braids_modulation', els.braids_modulation.value);
+            send('braids_color', els.braids_color.value);
 
 
             // Toggles
@@ -416,6 +519,17 @@
         bind('fm_ratio', 'fm_ratio');
         bind('fm_index', 'fm_index');
         bind('wt_index', 'wt_index');
+        bind('logue_detune', 'logue_detune');
+        bind('logue_oct', 'logue_oct');
+
+        // Braids Binds
+        bind('braids_model', 'braids_model');
+        bind('braids_fine', 'braids_fine');
+        bind('braids_coarse', 'braids_coarse');
+        bind('braids_fm', 'braids_fm');
+        bind('braids_timbre', 'braids_timbre');
+        bind('braids_modulation', 'braids_modulation');
+        bind('braids_color', 'braids_color');
 
         let currentWave = 'sine';
 
@@ -423,6 +537,8 @@
             const isFmWave = (currentWave === 'fm');
             const isCustomFm = els.fm_custom_on.checked;
             const isWt = (currentWave === 'wavetable');
+            const isLogue = (currentWave === 'logue');
+            const isBraids = (currentWave === 'braids');
 
             if (isFmWave || isCustomFm) {
                 els.fm_controls.classList.remove('hidden');
@@ -434,6 +550,18 @@
                 els.wt_controls.classList.remove('hidden');
             } else {
                 els.wt_controls.classList.add('hidden');
+            }
+
+            if (isLogue) {
+                els.logue_controls.classList.remove('hidden');
+            } else {
+                els.logue_controls.classList.add('hidden');
+            }
+
+            if (isBraids) {
+                els.braids_controls.classList.remove('hidden');
+            } else {
+                els.braids_controls.classList.add('hidden');
             }
         }
 
@@ -522,7 +650,7 @@
 
             // Mouse/Touch Events
             const down = (e) => { e.preventDefault(); playNote(k.note, div); };
-            const up = (e) => { e.preventDefault(); stopNote(div); };
+            const up = (e) => { e.preventDefault(); stopNote(k.note, div); };
 
             div.addEventListener('mousedown', down);
             div.addEventListener('mouseup', up);
@@ -543,8 +671,10 @@
             send('gate', 1);
         }
 
-        function stopNote(el) {
+        function stopNote(note, el) {
             if (el) el.classList.remove('active');
+            send('off', note); // Send NoteOff command
+            // We still send gate=0 to decrement the active count on backend
             send('gate', 0);
             activeKey = null;
         }
@@ -560,7 +690,7 @@
         document.addEventListener('keyup', (e) => {
             const k = keys.find(x => x.key === e.key.toLowerCase());
             if (k) {
-                stopNote(document.getElementById(`key-${k.key}`));
+                stopNote(k.note, document.getElementById(`key-${k.key}`));
             }
         });
 
