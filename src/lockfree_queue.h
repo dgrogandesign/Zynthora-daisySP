@@ -1,3 +1,4 @@
+#include <cstddef>
 #ifndef ZYNTHORA_QUEUE_H
 #define ZYNTHORA_QUEUE_H
 
