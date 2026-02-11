@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,11 +19,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 
 #ifndef STMLIB_STMLIB_H_
 #define STMLIB_STMLIB_H_
+
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 
 #include <inttypes.h>
 #include <stddef.h>
@@ -32,64 +34,75 @@
 #define NULL 0
 #endif
 
-#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&);               \
-  void operator=(const TypeName&)
+#define DISALLOW_COPY_AND_ASSIGN(TypeName)                                     \
+  TypeName(const TypeName &);                                                  \
+  void operator=(const TypeName &)
 
-#define CLIP(x) if (x < -32767) x = -32767; if (x > 32767) x = 32767;
+#define CLIP(x)                                                                \
+  if (x < -32767)                                                              \
+    x = -32767;                                                                \
+  if (x > 32767)                                                               \
+    x = 32767;
 
-#define CONSTRAIN(var, min, max) \
-  if (var < (min)) { \
-    var = (min); \
-  } else if (var > (max)) { \
-    var = (max); \
+#define CONSTRAIN(var, min, max)                                               \
+  if (var < (min)) {                                                           \
+    var = (min);                                                               \
+  } else if (var > (max)) {                                                    \
+    var = (max);                                                               \
   }
 
+#define JOIN(lhs, rhs) JOIN_1(lhs, rhs)
+#define JOIN_1(lhs, rhs) JOIN_2(lhs, rhs)
+#define JOIN_2(lhs, rhs) lhs##rhs
 
-#define JOIN(lhs, rhs)    JOIN_1(lhs, rhs)
-#define JOIN_1(lhs, rhs)  JOIN_2(lhs, rhs)
-#define JOIN_2(lhs, rhs)  lhs##rhs
-
-#define STATIC_ASSERT(expression, message)\
-  struct JOIN(__static_assertion_at_line_, __LINE__)\
-  {\
-    impl::StaticAssertion<static_cast<bool>((expression))> JOIN(JOIN(JOIN(STATIC_ASSERTION_FAILED_AT_LINE_, __LINE__), _), message);\
-  };\
-  typedef impl::StaticAssertionTest<sizeof(JOIN(__static_assertion_at_line_, __LINE__))> JOIN(__static_assertion_test_at_line_, __LINE__)
+#define STATIC_ASSERT(expression, message)                                     \
+  struct JOIN(__static_assertion_at_line_, __LINE__) {                         \
+    impl::StaticAssertion<static_cast<bool>((expression))>                     \
+        JOIN(JOIN(JOIN(STATIC_ASSERTION_FAILED_AT_LINE_, __LINE__), _),        \
+             message);                                                         \
+  };                                                                           \
+  typedef impl::StaticAssertionTest<sizeof(                                    \
+      JOIN(__static_assertion_at_line_, __LINE__))>                            \
+  JOIN(__static_assertion_test_at_line_, __LINE__)
 
 namespace impl {
 
-  template <bool>
-  struct StaticAssertion;
+template <bool> struct StaticAssertion;
 
-  template <>
-  struct StaticAssertion<true>
-  {
-  }; // StaticAssertion<true>
+template <> struct StaticAssertion<true> {}; // StaticAssertion<true>
 
-  template<int i>
-  struct StaticAssertionTest
-  {
-  }; // StaticAssertionTest<int>
+template <int i> struct StaticAssertionTest {}; // StaticAssertionTest<int>
 
 } // namespace impl
 
-
 #ifndef TEST
-#define IN_RAM __attribute__ ((section (".ramtext")))
+#define IN_RAM __attribute__((section(".ramtext")))
 #else
 #define IN_RAM
-#endif  // TEST
+#endif // TEST
 
-#define UNROLL2(x) x; x;
-#define UNROLL4(x) x; x; x; x;
-#define UNROLL8(x) x; x; x; x; x; x; x; x;
+#define UNROLL2(x)                                                             \
+  x;                                                                           \
+  x;
+#define UNROLL4(x)                                                             \
+  x;                                                                           \
+  x;                                                                           \
+  x;                                                                           \
+  x;
+#define UNROLL8(x)                                                             \
+  x;                                                                           \
+  x;                                                                           \
+  x;                                                                           \
+  x;                                                                           \
+  x;                                                                           \
+  x;                                                                           \
+  x;                                                                           \
+  x;
 
-template<bool b>
-inline void StaticAssertImplementation() {
-	char static_assert_size_mismatch[b] = { 0 };
+template <bool b> inline void StaticAssertImplementation() {
+  char static_assert_size_mismatch[b] = {0};
 }
- 
+
 namespace stmlib {
 
 typedef union {
@@ -103,12 +116,10 @@ typedef union {
   uint8_t bytes[4];
 } LongWord;
 
-
-template<uint32_t a, uint32_t b, uint32_t c, uint32_t d>
-struct FourCC {
+template <uint32_t a, uint32_t b, uint32_t c, uint32_t d> struct FourCC {
   static const uint32_t value = (((((d << 8) | c) << 8) | b) << 8) | a;
 };
 
-}  // namespace stmlib
+} // namespace stmlib
 
-#endif   // STMLIB_STMLIB_H_
+#endif // STMLIB_STMLIB_H_

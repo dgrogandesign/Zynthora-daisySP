@@ -170,6 +170,7 @@
                     <button onclick="setWave('wavetable', this)">WT</button>
                     <button onclick="setWave('braids', this)">BRAIDS</button>
                     <button onclick="setWave('logue', this)">LOGUE</button>
+                    <button onclick="setWave('plaits', this)">PLAITS</button>
                 </div>
             </div>
 
@@ -224,6 +225,45 @@
                     <div class="control" style="flex:1">
                         <label>COLOR: <span id="braids_colorVal">0.00</span></label>
                         <input type="range" id="braids_color" min="0.0" max="1.0" value="0.0" step="0.01">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLAITS CONTROLS -->
+            <div id="plaits_controls" class="hidden"
+                style="margin-top: 10px; border-top: 1px dashed #555; padding-top: 10px;">
+                <div class="control">
+                    <label>MODEL: <span id="plaits_modelVal">0</span></label>
+                    <input type="range" id="plaits_model" min="0" max="23" value="0" step="1">
+                </div>
+                <div class="fx-row">
+                    <div class="control" style="flex:1">
+                        <label>HARMONICS: <span id="plaits_harmonicsVal">0.50</span></label>
+                        <input type="range" id="plaits_harmonics" min="0.0" max="1.0" value="0.5" step="0.01">
+                    </div>
+                    <div class="control" style="flex:1">
+                        <label>TIMBRE: <span id="plaits_timbreVal">0.50</span></label>
+                        <input type="range" id="plaits_timbre" min="0.0" max="1.0" value="0.5" step="0.01">
+                    </div>
+                </div>
+                <div class="fx-row">
+                    <div class="control" style="flex:1">
+                        <label>MORPH: <span id="plaits_morphVal">0.50</span></label>
+                        <input type="range" id="plaits_morph" min="0.0" max="1.0" value="0.5" step="0.01">
+                    </div>
+                    <div class="control" style="flex:1">
+                        <label>DECAY: <span id="plaits_decayVal">0.50</span></label>
+                        <input type="range" id="plaits_decay" min="0.0" max="1.0" value="0.5" step="0.01">
+                    </div>
+                </div>
+                <div class="fx-row">
+                    <div class="control" style="flex:1">
+                        <label>FM (LFO): <span id="plaits_fmVal">0.00</span></label>
+                        <input type="range" id="plaits_fm" min="0.0" max="1.0" value="0.0" step="0.01">
+                    </div>
+                    <div class="control" style="flex:1">
+                        <label>MOD (TIMBRE): <span id="plaits_modVal">0.00</span></label>
+                        <input type="range" id="plaits_mod" min="0.0" max="1.0" value="0.0" step="0.01">
                     </div>
                 </div>
             </div>
@@ -384,6 +424,24 @@
             braids_modulationVal: document.getElementById('braids_modulationVal'),
             braids_colorVal: document.getElementById('braids_colorVal'),
 
+            // PLAITS
+            plaits_controls: document.getElementById('plaits_controls'),
+            plaits_model: document.getElementById('plaits_model'),
+            plaits_harmonics: document.getElementById('plaits_harmonics'),
+            plaits_timbre: document.getElementById('plaits_timbre'),
+            plaits_morph: document.getElementById('plaits_morph'),
+            plaits_decay: document.getElementById('plaits_decay'),
+            plaits_fm: document.getElementById('plaits_fm'),
+            plaits_mod: document.getElementById('plaits_mod'),
+
+            plaits_modelVal: document.getElementById('plaits_modelVal'),
+            plaits_harmonicsVal: document.getElementById('plaits_harmonicsVal'),
+            plaits_timbreVal: document.getElementById('plaits_timbreVal'),
+            plaits_morphVal: document.getElementById('plaits_morphVal'),
+            plaits_decayVal: document.getElementById('plaits_decayVal'),
+            plaits_fmVal: document.getElementById('plaits_fmVal'),
+            plaits_modVal: document.getElementById('plaits_modVal'),
+
 
             driveVal: document.getElementById('driveVal'),
             cutoffVal: document.getElementById('cutoffVal'),
@@ -476,6 +534,15 @@
             send('braids_modulation', els.braids_modulation.value);
             send('braids_color', els.braids_color.value);
 
+            // Plaits Sync
+            send('plaits_model', els.plaits_model.value);
+            send('plaits_harmonics', els.plaits_harmonics.value);
+            send('plaits_timbre', els.plaits_timbre.value);
+            send('plaits_morph', els.plaits_morph.value);
+            send('plaits_decay', els.plaits_decay.value);
+            send('plaits_fm', els.plaits_fm.value);
+            send('plaits_mod', els.plaits_mod.value);
+
 
             // Toggles
             updateFxState();
@@ -531,6 +598,15 @@
         bind('braids_modulation', 'braids_modulation');
         bind('braids_color', 'braids_color');
 
+        // Plaits Binds
+        bind('plaits_model', 'plaits_model');
+        bind('plaits_harmonics', 'plaits_harmonics');
+        bind('plaits_timbre', 'plaits_timbre');
+        bind('plaits_morph', 'plaits_morph');
+        bind('plaits_decay', 'plaits_decay');
+        bind('plaits_fm', 'plaits_fm');
+        bind('plaits_mod', 'plaits_mod');
+
         let currentWave = 'sine';
 
         function updateVisibility() {
@@ -539,6 +615,7 @@
             const isWt = (currentWave === 'wavetable');
             const isLogue = (currentWave === 'logue');
             const isBraids = (currentWave === 'braids');
+            const isPlaits = (currentWave === 'plaits');
 
             if (isFmWave || isCustomFm) {
                 els.fm_controls.classList.remove('hidden');
@@ -562,6 +639,12 @@
                 els.braids_controls.classList.remove('hidden');
             } else {
                 els.braids_controls.classList.add('hidden');
+            }
+
+            if (isPlaits) {
+                els.plaits_controls.classList.remove('hidden');
+            } else {
+                els.plaits_controls.classList.add('hidden');
             }
         }
 

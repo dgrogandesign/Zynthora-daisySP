@@ -21,7 +21,7 @@ INCLUDES = -I. -Isrc \
 	-Isrc/braids \
 	-Isrc/braids/stmlib
 
-CFLAGS = $(INCLUDES) -O3 -Wall -D__LINUX_ALSA__
+CFLAGS = $(INCLUDES) -O3 -Wall -D__LINUX_ALSA__ -DTEST
 LIBS = -lpthread -ldl -lm
 
 # DaisySP Sources (Main Library)
@@ -55,8 +55,19 @@ BRAIDS_SRCS = \
 	src/braids/stmlib/dsp/atan.cc \
 	src/braids/stmlib/dsp/units.cc
 
+# Plaits Sources
+PLAITS_SRCS = \
+	src/plaits/resources.cc \
+	$(wildcard src/plaits/dsp/*.cc) \
+	$(wildcard src/plaits/dsp/engine/*.cc) \
+	$(wildcard src/plaits/dsp/engine2/*.cc) \
+	$(wildcard src/plaits/dsp/chords/*.cc) \
+	$(wildcard src/plaits/dsp/fm/*.cc) \
+	$(wildcard src/plaits/dsp/physical_modelling/*.cc) \
+	$(wildcard src/plaits/dsp/speech/*.cc)
+
 # Main Sources
-SRCS = src/main.cpp src/braids_wrapper.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS) $(BRAIDS_SRCS)
+SRCS = src/main.cpp src/braids_wrapper.cpp src/plaits_wrapper.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS) $(BRAIDS_SRCS) $(PLAITS_SRCS)
 
 all: zynthora
 
@@ -65,3 +76,6 @@ zynthora: $(SRCS)
 
 clean:
 	rm -f zynthora
+
+resources:
+	python3 src/braids/stmlib/tools/resources_compiler_py3.py src/plaits/resources/resources.py

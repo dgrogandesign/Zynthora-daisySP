@@ -30,11 +30,13 @@ using namespace daisysp;
 #define WAVE_WT 101
 #define WAVE_LOGUE 102
 #define WAVE_BRAIDS 103
+#define WAVE_PLAITS 104
 #include "wavetables.h"
 
 // --- Logue SDK Adapter ---
 #include "braids_wrapper.h"
 #include "para_saw.h" // User Unit
+#include "plaits_wrapper.h"
 #include "unit_osc.h" // Shim
 
 struct LogueWrapper {
@@ -194,6 +196,7 @@ struct Engine {
   WavetableOsc wt;      // NEW Wavetable Engine
   LogueWrapper logue;   // Custom Logue Adapter
   BraidsWrapper braids; // Braids Engine
+  PlaitsWrapper plaits; // Plaits Engine
 
   // Chorus 2 (Custom)
   DelayLine<float, 4800> choDelayL; // ~100ms buffer
@@ -249,6 +252,7 @@ struct Engine {
     wt.Init(sampleRate);
     logue.Init(sampleRate);
     braids.Init(sampleRate);
+    plaits.Init(sampleRate);
 
     // Init Chorus 2
     choDelayL.Init();
@@ -290,6 +294,9 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
       // Force update freq to ensure Logue triggers even if Note event came
       // early/late or if ResetVoices cleared it.
       g_engine.logue.SetFreq(g_engine.baseFreq);
+
+      // Trigger other engines
+      g_engine.plaits.Trigger();
       break;
     case TYPE_NOTE_OFF:
       if (g_engine.activeNoteCount > 0) {
@@ -314,6 +321,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
         g_engine.wt.SetFreq(evt.value);
         g_engine.logue.SetFreq(evt.value); // FIX: Send freq to Logue
         g_engine.braids.SetFreq(evt.value);
+        g_engine.plaits.SetFrequency(evt.value);
         break;
       case P_SYN1_OSC_WAVE:
         g_engine.waveform = (int)evt.value;
@@ -446,6 +454,8 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
       sig = g_engine.logue.Process();
     } else if (g_engine.waveform == WAVE_BRAIDS) {
       sig = g_engine.braids.Process();
+    } else if (g_engine.waveform == WAVE_PLAITS) {
+      sig = g_engine.plaits.Process();
     } else {
       // Standard Oscillator + Custom FM
       if (g_engine.customFmOn) {
@@ -599,6 +609,8 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
             waveVal = (float)WAVE_LOGUE;
           else if (valStr == "braids")
             waveVal = (float)WAVE_BRAIDS;
+          else if (valStr == "plaits")
+            waveVal = (float)WAVE_PLAITS;
           send_param(P_SYN1_OSC_WAVE, waveVal);
           return;
         }
@@ -651,6 +663,26 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
           g_engine.braids.SetFM(val);
         else if (cmd == "braids_modulation")
           g_engine.braids.SetModulation(val);
+
+        // Plaits Commands
+        else if (cmd == "plaits_model")
+          g_engine.plaits.SetModel((int)val);
+        else if (cmd == "plaits_harmonics")
+          g_engine.plaits.SetHarmonics(val);
+        else if (cmd == "plaits_timbre")
+          g_engine.plaits.SetTimbre(val);
+        else if (cmd == "plaits_morph")
+          g_engine.plaits.SetMorph(val);
+        else if (cmd == "plaits_fm")
+          g_engine.plaits.SetFMAmount(val);
+        else if (cmd == "plaits_mod")
+          g_engine.plaits.SetModAmount(val);
+        else if (cmd == "plaits_decay")
+          g_engine.plaits.SetDecay(val);
+        else if (cmd == "plaits_coarse")
+          g_engine.plaits.SetCoarse(val);
+        else if (cmd == "plaits_fine")
+          g_engine.plaits.SetFine(val);
 
         else if (cmd == "amp")
           send_param(999, val);
