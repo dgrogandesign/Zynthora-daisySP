@@ -10,7 +10,7 @@ PlaitsWrapper::PlaitsWrapper()
       harmonics_(0.5f), timbre_(0.5f), morph_(0.5f), coarse_(0.0f), fine_(0.0f),
       fm_amount_(0.0f), mod_amount_(0.0f), decay_(0.5f),
       model_(0), // First model
-      lfo_phase_(0.0f), trigger_pending_(false) {
+      lfo_phase_(0.0f), gate_(false), trigger_reset_counter_(0) {
   shared_buffer_ = new char[PLAITS_BUFFER_SIZE];
 
   // Default Patch
@@ -33,10 +33,10 @@ PlaitsWrapper::PlaitsWrapper()
   modulations_.timbre = 0.0f;
   modulations_.morph = 0.0f;
   modulations_.trigger = 0.0f;
-  modulations_.level = 0.0f; // VCA level
+  modulations_.level = 1.0f; // Boost level for FM/VA models
   modulations_.frequency_patched = false;
   modulations_.trigger_patched = true; // Use internal trigger/envelope logic
-  modulations_.level_patched = false;
+  modulations_.level_patched = true;   // Use explicit level control
 
   // Set default attenuverters to 1.0 so external modulation works
   patch_.frequency_modulation_amount = 0.05f; // Small amount for Vibrato
@@ -84,16 +84,21 @@ void PlaitsWrapper::SetDecay(float value) {
   patch_.decay = value;
 }
 
-void PlaitsWrapper::Trigger() { trigger_pending_ = true; }
+void PlaitsWrapper::SetGate(bool state) {
+  if (state && gate_) {
+    trigger_reset_counter_ = 8; // Force low for ~8 blocks (>> kTriggerDelay=5)
+  }
+  gate_ = state;
+}
 
 float PlaitsWrapper::Process() {
   if (buffer_index_ >= kBlockSize) {
-    // Handle Trigger
-    if (trigger_pending_) {
-      modulations_.trigger = 1.0f;
-      trigger_pending_ = false;
-    } else {
+    // Handle Trigger/Gate
+    if (trigger_reset_counter_ > 0) {
       modulations_.trigger = 0.0f;
+      trigger_reset_counter_--;
+    } else {
+      modulations_.trigger = gate_ ? 1.0f : 0.0f;
     }
 
     // Update LFO (6Hz)

@@ -28,7 +28,7 @@ public:
   void SetModAmount(float amount); // 0.0 to 1.0 (Timbre/Morph Mod)
 
   // Trigger / Gate (for internal envelope)
-  void Trigger();
+  void SetGate(bool state);
   void SetSustain(bool sustain);
   void SetDecay(float value); // 0.0 to 1.0
 
@@ -59,7 +59,8 @@ private:
 
   // Internal LFO state
   float lfo_phase_;
-  bool trigger_pending_;
+  bool gate_;
+  int trigger_reset_counter_;
 
   // Memory for Plaits
   char *shared_buffer_;

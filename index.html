@@ -232,6 +232,33 @@
             <!-- PLAITS CONTROLS -->
             <div id="plaits_controls" class="hidden"
                 style="margin-top: 10px; border-top: 1px dashed #555; padding-top: 10px;">
+                <div class="control-group">
+                    <h3>Master Effects</h3>
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="studio_enable"
+                                onchange="send('studio_enable', this.checked ? 1 : 0)">
+                            Enable Master FX
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label>Console Drive</label>
+                        <input type="range" id="console_drive" min="0" max="1" step="0.01" value="0.5"
+                            oninput="send('console_drive', this.value)">
+                    </div>
+                    <div class="control-group">
+                        <label>Mackity Drive</label>
+                        <input type="range" id="mackity_drive" min="0" max="1" step="0.01" value="0.8"
+                            oninput="send('mackity_drive', this.value)">
+                    </div>
+                    <div class="control-group">
+                        <label>Pressure Thresh</label>
+                        <input type="range" id="pressure_thresh" min="0" max="1" step="0.01" value="0.5"
+                            oninput="send('pressure_thresh', this.value)">
+                    </div>
+                    <!-- Existing Effects -->
+                </div>
+
                 <div class="control">
                     <label>MODEL: <span id="plaits_modelVal">0</span></label>
                     <input type="range" id="plaits_model" min="0" max="23" value="0" step="1">
@@ -368,6 +395,51 @@
             </div>
         </div>
 
+        <!-- STUDIO EFFECTS (AIRWINDOWS) -->
+        <div style="border-top: 1px solid #444; padding-top: 10px; margin-top: 10px;">
+            <div class="panel-header">
+                <span>STUDIO</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="studio_enable" checked onchange="syncState()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="control">
+                <label>GALACTIC MIX: <span id="gmixVal">0.00</span></label>
+                <input type="range" id="gmix" min="0" max="1" value="0.0" step="0.01">
+            </div>
+            <div class="fx-row">
+                <div class="control" style="flex:1">
+                    <label>SIZE: <span id="gsizeVal">0.50</span></label>
+                    <input type="range" id="gsize" min="0" max="1" value="0.5" step="0.01">
+                </div>
+                <div class="control" style="flex:1">
+                    <label>DETUNE: <span id="gdetuneVal">0.50</span></label>
+                    <input type="range" id="gdetune" min="0" max="1" value="0.5" step="0.01">
+                </div>
+            </div>
+            <div class="fx-row">
+                <div class="control" style="flex:1">
+                    <label>BRIGHT: <span id="gbrightVal">0.50</span></label>
+                    <input type="range" id="gbright" min="0" max="1" value="0.5" step="0.01">
+                </div>
+                <div class="control" style="flex:1">
+                    <label>CONSOLE DRV: <span id="cdriveVal">0.00</span></label>
+                    <input type="range" id="cdrive" min="0" max="1" value="0.0" step="0.01">
+                </div>
+            </div>
+            <div class="fx-row">
+                <div class="control" style="flex:1">
+                    <label>TOPE DRIVE: <span id="tdriveVal">0.00</span></label>
+                    <input type="range" id="tdrive" min="0" max="1" value="0.0" step="0.01">
+                </div>
+                <div class="control" style="flex:1">
+                    <label>TOPE FUZZ: <span id="tfuzzVal">0.00</span></label>
+                    <input type="range" id="tfuzz" min="0" max="1" value="0.0" step="0.01">
+                </div>
+            </div>
+        </div>
+
         <!-- MASTER -->
         <div class="control" style="border-top: 1px solid #444; padding-top: 15px;">
             <label>MASTER VOL: <span id="ampVal">0.5</span></label>
@@ -442,6 +514,24 @@
             plaits_fmVal: document.getElementById('plaits_fmVal'),
             plaits_modVal: document.getElementById('plaits_modVal'),
 
+            // Studio
+            studio_enable: document.getElementById('studio_enable'),
+            gmix: document.getElementById('gmix'),
+            gsize: document.getElementById('gsize'),
+            gdetune: document.getElementById('gdetune'),
+            gbright: document.getElementById('gbright'),
+            cdrive: document.getElementById('cdrive'),
+            tdrive: document.getElementById('tdrive'),
+            tfuzz: document.getElementById('tfuzz'),
+
+            gmixVal: document.getElementById('gmixVal'),
+            gsizeVal: document.getElementById('gsizeVal'),
+            gdetuneVal: document.getElementById('gdetuneVal'),
+            gbrightVal: document.getElementById('gbrightVal'),
+            cdriveVal: document.getElementById('cdriveVal'),
+            tdriveVal: document.getElementById('tdriveVal'),
+            tfuzzVal: document.getElementById('tfuzzVal'),
+
 
             driveVal: document.getElementById('driveVal'),
             cutoffVal: document.getElementById('cutoffVal'),
@@ -483,6 +573,12 @@
             wt_controls: document.getElementById('wt_controls'),
             logue_controls: document.getElementById('logue_controls'),
 
+
+            // Studio / Airwindows
+            studio_enable: document.getElementById('studio_enable'),
+            console_drive: document.getElementById('console_drive'),
+            mackity_drive: document.getElementById('mackity_drive'),
+            pressure_thresh: document.getElementById('pressure_thresh'),
 
             // FX Panels
             delay_controls: document.getElementById('delay_controls'),
@@ -542,6 +638,18 @@
             send('plaits_decay', els.plaits_decay.value);
             send('plaits_fm', els.plaits_fm.value);
             send('plaits_mod', els.plaits_mod.value);
+
+            // Studio Sync
+            send('studio_enable', els.studio_enable.checked ? 1 : 0);
+            send('galactic_mix', els.gmix.value);
+            send('galactic_size', els.gsize.value);
+            send('galactic_detune', els.gdetune.value);
+            send('galactic_bright', els.gbright.value);
+            send('console_drive', els.console_drive.value);
+            send('mackity_drive', els.mackity_drive.value);
+            send('pressure_thresh', els.pressure_thresh.value);
+            send('tope_drive', els.tdrive.value);
+            send('tope_fuzz', els.tfuzz.value);
 
 
             // Toggles
@@ -605,7 +713,17 @@
         bind('plaits_morph', 'plaits_morph');
         bind('plaits_decay', 'plaits_decay');
         bind('plaits_fm', 'plaits_fm');
+        bind('plaits_fm', 'plaits_fm');
         bind('plaits_mod', 'plaits_mod');
+
+        // Studio Binds
+        bind('gmix', 'galactic_mix');
+        bind('gsize', 'galactic_size');
+        bind('gdetune', 'galactic_detune');
+        bind('gbright', 'galactic_bright');
+        bind('cdrive', 'console_drive');
+        bind('tdrive', 'tope_drive');
+        bind('tfuzz', 'tope_fuzz');
 
         let currentWave = 'sine';
 

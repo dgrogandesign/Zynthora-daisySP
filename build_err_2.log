@@ -1,0 +1,208 @@
+g++ -I. -Isrc -IDaisySP/Source -IDaisySP/Source/Control -IDaisySP/Source/Drums -IDaisySP/Source/Dynamics -IDaisySP/Source/Effects -IDaisySP/Source/Filters -IDaisySP/Source/Noise -IDaisySP/Source/PhysicalModeling -IDaisySP/Source/Sampling -IDaisySP/Source/Synthesis -IDaisySP/Source/Utility -IDaisySP/DaisySP-LGPL/Source -IDaisySP/DaisySP-LGPL/Source/Effects -IDaisySP/DaisySP-LGPL/Source/Filters -Isrc/logue_shim -Ilogue_units/para_saw -Isrc/braids -Isrc/braids/stmlib -Isrc/effects/airwindows -O3 -Wall -D__LINUX_ALSA__ -DTEST src/main.cpp src/braids_wrapper.cpp src/plaits_wrapper.cpp mongoose.c DaisySP/Source/Control/adenv.cpp DaisySP/Source/Control/adsr.cpp DaisySP/Source/Control/phasor.cpp DaisySP/Source/Effects/flanger.cpp DaisySP/Source/Effects/overdrive.cpp DaisySP/Source/Effects/chorus.cpp DaisySP/Source/Filters/svf.cpp DaisySP/Source/Synthesis/oscillator.cpp DaisySP/Source/Synthesis/variablesawosc.cpp DaisySP/Source/Synthesis/fm2.cpp DaisySP/Source/Utility/metro.cpp DaisySP/Source/Utility/dcblock.cpp DaisySP/DaisySP-LGPL/Source/Effects/reverbsc.cpp DaisySP/DaisySP-LGPL/Source/Filters/moogladder.cpp src/braids/analog_oscillator.cc src/braids/digital_oscillator.cc src/braids/macro_oscillator.cc src/braids/quantizer.cc src/braids/resources.cc src/braids/stmlib/utils/random.cc src/braids/stmlib/dsp/atan.cc src/braids/stmlib/dsp/units.cc src/plaits/resources.cc src/plaits/dsp/voice.cc src/plaits/dsp/engine/additive_engine.cc src/plaits/dsp/engine/bass_drum_engine.cc src/plaits/dsp/engine/chord_engine.cc src/plaits/dsp/engine/fm_engine.cc src/plaits/dsp/engine/grain_engine.cc src/plaits/dsp/engine/hi_hat_engine.cc src/plaits/dsp/engine/modal_engine.cc src/plaits/dsp/engine/noise_engine.cc src/plaits/dsp/engine/particle_engine.cc src/plaits/dsp/engine/snare_drum_engine.cc src/plaits/dsp/engine/speech_engine.cc src/plaits/dsp/engine/string_engine.cc src/plaits/dsp/engine/swarm_engine.cc src/plaits/dsp/engine/virtual_analog_engine.cc src/plaits/dsp/engine/waveshaping_engine.cc src/plaits/dsp/engine/wavetable_engine.cc src/plaits/dsp/engine2/chiptune_engine.cc src/plaits/dsp/engine2/phase_distortion_engine.cc src/plaits/dsp/engine2/six_op_engine.cc src/plaits/dsp/engine2/string_machine_engine.cc src/plaits/dsp/engine2/virtual_analog_vcf_engine.cc src/plaits/dsp/engine2/wave_terrain_engine.cc src/plaits/dsp/chords/chord_bank.cc src/plaits/dsp/fm/algorithms.cc src/plaits/dsp/fm/dx_units.cc src/plaits/dsp/physical_modelling/modal_voice.cc src/plaits/dsp/physical_modelling/resonator.cc src/plaits/dsp/physical_modelling/string.cc src/plaits/dsp/physical_modelling/string_voice.cc src/plaits/dsp/speech/lpc_speech_synth.cc src/plaits/dsp/speech/lpc_speech_synth_controller.cc src/plaits/dsp/speech/lpc_speech_synth_phonemes.cc src/plaits/dsp/speech/lpc_speech_synth_words.cc src/plaits/dsp/speech/naive_speech_synth.cc src/plaits/dsp/speech/sam_speech_synth.cc src/effects/airwindows/AirwindowsWrapper.cpp src/effects/airwindows/Galactic.cpp src/effects/airwindows/GalacticProc.cpp src/effects/airwindows/Console7Channel.cpp src/effects/airwindows/Console7ChannelProc.cpp -o zynthora -lpthread -ldl -lm
+In file included from ./src/effects/airwindows/AirwindowsWrapper.h:4,
+                 from src/main.cpp:40:
+./src/effects/airwindows/Console7Channel.h:25:42: warning: multi-character character constant [-Wmultichar]
+   25 |   static const unsigned long kUniqueId = 'conq';
+      |                                          ^~~~~~
+In file included from ./src/effects/airwindows/AirwindowsWrapper.h:5:
+./src/effects/airwindows/Galactic.h:34:7: warning: multi-character character constant [-Wmultichar]
+   34 |       'gala'; // Change this to what the AU identity is!
+      |       ^~~~~~
+In file included from src/main.cpp:38:
+logue_units/para_saw/para_saw.h: In member function ‘void Osc::Process(const float*, float*, size_t)’:
+logue_units/para_saw/para_saw.h:192:29: warning: unused variable ‘in_p’ [-Wunused-variable]
+  192 |     const float *__restrict in_p = in;
+      |                             ^~~~
+logue_units/para_saw/para_saw.h:196:19: warning: unused variable ‘flags’ [-Wunused-variable]
+  196 |     const uint8_t flags = state_.flags;
+      |                   ^~~~~
+logue_units/para_saw/para_saw.h: In member function ‘void Osc::PitchBend(uint8_t)’:
+logue_units/para_saw/para_saw.h:344:5: warning: statement has no effect [-Wunused-value]
+  344 |     (uint8_t)bend;
+      |     ^~~~~~~~~~~~~
+logue_units/para_saw/para_saw.h: In member function ‘void Osc::ChannelPressure(uint8_t)’:
+logue_units/para_saw/para_saw.h:348:5: warning: statement has no effect [-Wunused-value]
+  348 |     (uint8_t)press;
+      |     ^~~~~~~~~~~~~~
+logue_units/para_saw/para_saw.h: In member function ‘void Osc::AfterTouch(uint8_t, uint8_t)’:
+logue_units/para_saw/para_saw.h:352:5: warning: statement has no effect [-Wunused-value]
+  352 |     (uint8_t)note;
+      |     ^~~~~~~~~~~~~
+logue_units/para_saw/para_saw.h:353:5: warning: statement has no effect [-Wunused-value]
+  353 |     (uint8_t)press;
+      |     ^~~~~~~~~~~~~~
+In file included from src/main.cpp:4:
+./miniaudio.h: In function ‘void ma_engine_node_process_pcm_frames__sound(ma_node*, const float**, ma_uint32*, float**, ma_uint32*)’:
+./miniaudio.h:15808:84: warning: ‘long unsigned int __atomic_load_8(const volatile void*, int)’ writing 8 bytes into a region of size 0 overflows the destination [-Wstringop-overflow=]
+15808 |     #define ma_atomic_load_explicit_64(dst, order)                  __atomic_load_n(dst, order)
+      |                                                                     ~~~~~~~~~~~~~~~^~~~~~~~~~~~
+./miniaudio.h:17064:73: note: in expansion of macro ‘ma_atomic_load_explicit_64’
+17064 | #define ma_atomic_load_64(ptr)                                          ma_atomic_load_explicit_64(ptr, ma_atomic_memory_order_seq_cst)
+      |                                                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+./miniaudio.h:76885:18: note: in expansion of macro ‘ma_atomic_load_64’
+76885 |     seekTarget = ma_atomic_load_64(&pSound->seekTarget);
+      |                  ^~~~~~~~~~~~~~~~~
+cc1plus: note: destination object is likely at address zero
+In file included from src/effects/airwindows/AirwindowsWrapper.h:4,
+                 from src/effects/airwindows/AirwindowsWrapper.cpp:1:
+src/effects/airwindows/Console7Channel.h:25:42: warning: multi-character character constant [-Wmultichar]
+   25 |   static const unsigned long kUniqueId = 'conq';
+      |                                          ^~~~~~
+In file included from src/effects/airwindows/AirwindowsWrapper.h:5:
+src/effects/airwindows/Galactic.h:34:7: warning: multi-character character constant [-Wmultichar]
+   34 |       'gala'; // Change this to what the AU identity is!
+      |       ^~~~~~
+src/effects/airwindows/AirwindowsWrapper.cpp: In member function ‘void AirwindowsWrapper::Process(float*, float*, size_t)’:
+src/effects/airwindows/AirwindowsWrapper.cpp:55:10: error: ‘cout’ is not a member of ‘std’
+   55 |     std::cout << "[AW] Size: " << size << " En: " << enabled_
+      |          ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:3:1: note: ‘std::cout’ is defined in header ‘<iostream>’; this is probably fixable by adding ‘#include <iostream>’
+    2 | #include <algorithm>
+  +++ |+#include <iostream>
+    3 | 
+src/effects/airwindows/AirwindowsWrapper.cpp:51:20: warning: unused variable ‘pCon’ [-Wunused-variable]
+   51 |     float pIn = 0, pCon = 0, pGal = 0;
+      |                    ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:51:30: warning: unused variable ‘pGal’ [-Wunused-variable]
+   51 |     float pIn = 0, pCon = 0, pGal = 0;
+      |                              ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:73:10: error: ‘cout’ is not a member of ‘std’
+   73 |     std::cout << " ConPeak: " << pCon;
+      |          ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:73:10: note: ‘std::cout’ is defined in header ‘<iostream>’; this is probably fixable by adding ‘#include <iostream>’
+src/effects/airwindows/AirwindowsWrapper.cpp:90:10: error: ‘cout’ is not a member of ‘std’
+   90 |     std::cout << " GalPeak: " << pGal << std::endl;
+      |          ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:90:10: note: ‘std::cout’ is defined in header ‘<iostream>’; this is probably fixable by adding ‘#include <iostream>’
+src/effects/airwindows/AirwindowsWrapper.cpp:90:47: error: ‘endl’ is not a member of ‘std’
+   90 |     std::cout << " GalPeak: " << pGal << std::endl;
+      |                                               ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:3:1: note: ‘std::endl’ is defined in header ‘<ostream>’; this is probably fixable by adding ‘#include <ostream>’
+    2 | #include <algorithm>
+  +++ |+#include <ostream>
+    3 | 
+In file included from src/effects/airwindows/Galactic.cpp:7:
+src/effects/airwindows/Galactic.h:34:7: warning: multi-character character constant [-Wmultichar]
+   34 |       'gala'; // Change this to what the AU identity is!
+      |       ^~~~~~
+src/effects/airwindows/Galactic.cpp:11:1: error: ‘AudioEffect’ does not name a type; did you mean ‘AudioEffectX’?
+   11 | AudioEffect* createEffectInstance(audioMasterCallback audioMaster) {return new Galactic(audioMaster);}
+      | ^~~~~~~~~~~
+      | AudioEffectX
+src/effects/airwindows/Galactic.cpp: In constructor ‘airwindows::Galactic::Galactic(audioMasterCallback)’:
+src/effects/airwindows/Galactic.cpp:80:5: error: ‘setNumInputs’ was not declared in this scope; did you mean ‘kNumInputs’?
+   80 |     setNumInputs(kNumInputs);
+      |     ^~~~~~~~~~~~
+      |     kNumInputs
+src/effects/airwindows/Galactic.cpp:81:5: error: ‘setNumOutputs’ was not declared in this scope; did you mean ‘kNumOutputs’?
+   81 |     setNumOutputs(kNumOutputs);
+      |     ^~~~~~~~~~~~~
+      |     kNumOutputs
+src/effects/airwindows/Galactic.cpp:82:5: error: ‘setUniqueID’ was not declared in this scope; did you mean ‘kUniqueId’?
+   82 |     setUniqueID(kUniqueId);
+      |     ^~~~~~~~~~~
+      |     kUniqueId
+src/effects/airwindows/Galactic.cpp:83:5: error: ‘canProcessReplacing’ was not declared in this scope; did you mean ‘processReplacing’?
+   83 |     canProcessReplacing();     // supports output replacing
+      |     ^~~~~~~~~~~~~~~~~~~
+      |     processReplacing
+src/effects/airwindows/Galactic.cpp:84:5: error: ‘canDoubleReplacing’ was not declared in this scope; did you mean ‘processDoubleReplacing’?
+   84 |     canDoubleReplacing();      // supports double precision processing
+      |     ^~~~~~~~~~~~~~~~~~
+      |     processDoubleReplacing
+src/effects/airwindows/Galactic.cpp:85:9: error: ‘programsAreChunks’ was not declared in this scope
+   85 |         programsAreChunks(true);
+      |         ^~~~~~~~~~~~~~~~~
+In file included from src/effects/airwindows/GalacticProc.cpp:7:
+src/effects/airwindows/Galactic.h:34:7: warning: multi-character character constant [-Wmultichar]
+   34 |       'gala'; // Change this to what the AU identity is!
+      |       ^~~~~~
+src/effects/airwindows/GalacticProc.cpp: In member function ‘virtual void airwindows::Galactic::processReplacing(float**, float**, VstInt32)’:
+src/effects/airwindows/GalacticProc.cpp:236:17: warning: value computed is not used [-Wunused-value]
+  236 |                 *in1++;
+      |                 ^~~~~~
+src/effects/airwindows/GalacticProc.cpp:237:17: warning: value computed is not used [-Wunused-value]
+  237 |                 *in2++;
+      |                 ^~~~~~
+src/effects/airwindows/GalacticProc.cpp:238:17: warning: value computed is not used [-Wunused-value]
+  238 |                 *out1++;
+      |                 ^~~~~~~
+src/effects/airwindows/GalacticProc.cpp:239:17: warning: value computed is not used [-Wunused-value]
+  239 |                 *out2++;
+      |                 ^~~~~~~
+src/effects/airwindows/GalacticProc.cpp: In member function ‘virtual void airwindows::Galactic::processDoubleReplacing(double**, double**, VstInt32)’:
+src/effects/airwindows/GalacticProc.cpp:468:17: warning: value computed is not used [-Wunused-value]
+  468 |                 *in1++;
+      |                 ^~~~~~
+src/effects/airwindows/GalacticProc.cpp:469:17: warning: value computed is not used [-Wunused-value]
+  469 |                 *in2++;
+      |                 ^~~~~~
+src/effects/airwindows/GalacticProc.cpp:470:17: warning: value computed is not used [-Wunused-value]
+  470 |                 *out1++;
+      |                 ^~~~~~~
+src/effects/airwindows/GalacticProc.cpp:471:17: warning: value computed is not used [-Wunused-value]
+  471 |                 *out2++;
+      |                 ^~~~~~~
+In file included from src/effects/airwindows/Console7Channel.cpp:7:
+src/effects/airwindows/Console7Channel.h:25:42: warning: multi-character character constant [-Wmultichar]
+   25 |   static const unsigned long kUniqueId = 'conq';
+      |                                          ^~~~~~
+src/effects/airwindows/Console7Channel.cpp:11:1: error: ‘AudioEffect’ does not name a type; did you mean ‘AudioEffectX’?
+   11 | AudioEffect* createEffectInstance(audioMasterCallback audioMaster) {return new Console7Channel(audioMaster);}
+      | ^~~~~~~~~~~
+      | AudioEffectX
+src/effects/airwindows/Console7Channel.cpp: In constructor ‘airwindows::Console7Channel::Console7Channel(audioMasterCallback)’:
+src/effects/airwindows/Console7Channel.cpp:27:5: error: ‘setNumInputs’ was not declared in this scope; did you mean ‘kNumInputs’?
+   27 |     setNumInputs(kNumInputs);
+      |     ^~~~~~~~~~~~
+      |     kNumInputs
+src/effects/airwindows/Console7Channel.cpp:28:5: error: ‘setNumOutputs’ was not declared in this scope; did you mean ‘kNumOutputs’?
+   28 |     setNumOutputs(kNumOutputs);
+      |     ^~~~~~~~~~~~~
+      |     kNumOutputs
+src/effects/airwindows/Console7Channel.cpp:29:5: error: ‘setUniqueID’ was not declared in this scope; did you mean ‘kUniqueId’?
+   29 |     setUniqueID(kUniqueId);
+      |     ^~~~~~~~~~~
+      |     kUniqueId
+src/effects/airwindows/Console7Channel.cpp:30:5: error: ‘canProcessReplacing’ was not declared in this scope; did you mean ‘processReplacing’?
+   30 |     canProcessReplacing();     // supports output replacing
+      |     ^~~~~~~~~~~~~~~~~~~
+      |     processReplacing
+src/effects/airwindows/Console7Channel.cpp:31:5: error: ‘canDoubleReplacing’ was not declared in this scope; did you mean ‘processDoubleReplacing’?
+   31 |     canDoubleReplacing();      // supports double precision processing
+      |     ^~~~~~~~~~~~~~~~~~
+      |     processDoubleReplacing
+src/effects/airwindows/Console7Channel.cpp:32:9: error: ‘programsAreChunks’ was not declared in this scope
+   32 |         programsAreChunks(true);
+      |         ^~~~~~~~~~~~~~~~~
+In file included from src/effects/airwindows/Console7ChannelProc.cpp:7:
+src/effects/airwindows/Console7Channel.h:25:42: warning: multi-character character constant [-Wmultichar]
+   25 |   static const unsigned long kUniqueId = 'conq';
+      |                                          ^~~~~~
+src/effects/airwindows/Console7ChannelProc.cpp: In member function ‘virtual void airwindows::Console7Channel::processReplacing(float**, float**, VstInt32)’:
+src/effects/airwindows/Console7ChannelProc.cpp:134:5: warning: value computed is not used [-Wunused-value]
+  134 |     *in1++;
+      |     ^~~~~~
+src/effects/airwindows/Console7ChannelProc.cpp:135:5: warning: value computed is not used [-Wunused-value]
+  135 |     *in2++;
+      |     ^~~~~~
+src/effects/airwindows/Console7ChannelProc.cpp:136:5: warning: value computed is not used [-Wunused-value]
+  136 |     *out1++;
+      |     ^~~~~~~
+src/effects/airwindows/Console7ChannelProc.cpp:137:5: warning: value computed is not used [-Wunused-value]
+  137 |     *out2++;
+      |     ^~~~~~~
+src/effects/airwindows/Console7ChannelProc.cpp: In member function ‘virtual void airwindows::Console7Channel::processDoubleReplacing(double**, double**, VstInt32)’:
+src/effects/airwindows/Console7ChannelProc.cpp:257:5: warning: value computed is not used [-Wunused-value]
+  257 |     *in1++;
+      |     ^~~~~~
+src/effects/airwindows/Console7ChannelProc.cpp:258:5: warning: value computed is not used [-Wunused-value]
+  258 |     *in2++;
+      |     ^~~~~~
+src/effects/airwindows/Console7ChannelProc.cpp:259:5: warning: value computed is not used [-Wunused-value]
+  259 |     *out1++;
+      |     ^~~~~~~
+src/effects/airwindows/Console7ChannelProc.cpp:260:5: warning: value computed is not used [-Wunused-value]
+  260 |     *out2++;
+      |     ^~~~~~~
+make: *** [Makefile:84: zynthora] Error 1

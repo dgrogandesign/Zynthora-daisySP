@@ -1,0 +1,4 @@
+In file included from src/effects/airwindows/GalacticProc.cpp:7:
+src/effects/airwindows/Galactic.h:34:7: warning: multi-character character constant [-Wmultichar]
+   34 |       'gala'; // Change this to what the AU identity is!
+      |       ^~~~~~

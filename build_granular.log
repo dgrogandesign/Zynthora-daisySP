@@ -1,0 +1,42 @@
+Compiling DaisySP...
+Compiling Braids...
+Compiling Plaits...
+Compiling Airwindows...
+In file included from src/effects/airwindows/AirwindowsWrapper.h:4,
+                 from src/effects/airwindows/AirwindowsWrapper.cpp:1:
+src/effects/airwindows/Console7Channel.h:25:42: warning: multi-character character constant [-Wmultichar]
+   25 |   static const unsigned long kUniqueId = 'conq';
+      |                                          ^~~~~~
+In file included from src/effects/airwindows/AirwindowsWrapper.h:5:
+src/effects/airwindows/Galactic.h:34:7: warning: multi-character character constant [-Wmultichar]
+   34 |       'gala'; // Change this to what the AU identity is!
+      |       ^~~~~~
+src/effects/airwindows/AirwindowsWrapper.cpp: In member function ‘void AirwindowsWrapper::Process(float*, float*, size_t)’:
+src/effects/airwindows/AirwindowsWrapper.cpp:55:10: error: ‘cout’ is not a member of ‘std’
+   55 |     std::cout << "[AW] Size: " << size << " En: " << enabled_
+      |          ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:3:1: note: ‘std::cout’ is defined in header ‘<iostream>’; this is probably fixable by adding ‘#include <iostream>’
+    2 | #include <algorithm>
+  +++ |+#include <iostream>
+    3 | 
+src/effects/airwindows/AirwindowsWrapper.cpp:51:20: warning: unused variable ‘pCon’ [-Wunused-variable]
+   51 |     float pIn = 0, pCon = 0, pGal = 0;
+      |                    ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:51:30: warning: unused variable ‘pGal’ [-Wunused-variable]
+   51 |     float pIn = 0, pCon = 0, pGal = 0;
+      |                              ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:73:10: error: ‘cout’ is not a member of ‘std’
+   73 |     std::cout << " ConPeak: " << pCon;
+      |          ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:73:10: note: ‘std::cout’ is defined in header ‘<iostream>’; this is probably fixable by adding ‘#include <iostream>’
+src/effects/airwindows/AirwindowsWrapper.cpp:90:10: error: ‘cout’ is not a member of ‘std’
+   90 |     std::cout << " GalPeak: " << pGal << std::endl;
+      |          ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:90:10: note: ‘std::cout’ is defined in header ‘<iostream>’; this is probably fixable by adding ‘#include <iostream>’
+src/effects/airwindows/AirwindowsWrapper.cpp:90:47: error: ‘endl’ is not a member of ‘std’
+   90 |     std::cout << " GalPeak: " << pGal << std::endl;
+      |                                               ^~~~
+src/effects/airwindows/AirwindowsWrapper.cpp:3:1: note: ‘std::endl’ is defined in header ‘<ostream>’; this is probably fixable by adding ‘#include <ostream>’
+    2 | #include <algorithm>
+  +++ |+#include <ostream>
+    3 | 

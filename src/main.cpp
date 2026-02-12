@@ -37,13 +37,12 @@ using namespace daisysp;
 #include "braids_wrapper.h"
 #include "para_saw.h" // User Unit
 #include "plaits_wrapper.h"
+#include "src/effects/airwindows/AirwindowsWrapper.h"
 #include "unit_osc.h" // Shim
 
 struct LogueWrapper {
   Osc logueOsc;
   unit_runtime_desc_t desc;
-  float paramDetune = 0.0f;
-  int paramOct = 0;
 
   // Internal state
   uint8_t lastNote = 255;
@@ -77,14 +76,14 @@ struct LogueWrapper {
     // `voice[i].note`. So we MUST call NoteOn to set the pitch.
 
     if (noteInt != lastNote) {
-      std::cout << "LOGUE ON: " << (int)noteInt << std::endl;
+      // std::cout << "LOGUE ON: " << (int)noteInt << std::endl;
       logueOsc.NoteOn(noteInt, 100);
       lastNote = noteInt;
     }
   }
 
   void NoteOff(uint8_t note) {
-    std::cout << "LOGUE OFF: " << (int)note << std::endl;
+    // std::cout << "LOGUE OFF: " << (int)note << std::endl;
     logueOsc.NoteOff(note); // Tell Logue engine to release this specific voice
   }
 
@@ -107,11 +106,7 @@ struct LogueWrapper {
     return out[0];
   }
 
-  void ResetVoices() {
-    // Clear all voices and reset note tracking
-    logueOsc.AllNoteOff();
-    lastNote = 255;
-  }
+  void ResetVoices() { logueOsc.Reset(); }
 };
 
 // ============================================================================
@@ -192,11 +187,12 @@ struct Engine {
   MoogLadder flt;
   ReverbSc verb;
   Overdrive drive;
-  Chorus chorus;        // Legacy DaisySP Chorus
-  WavetableOsc wt;      // NEW Wavetable Engine
-  LogueWrapper logue;   // Custom Logue Adapter
-  BraidsWrapper braids; // Braids Engine
-  PlaitsWrapper plaits; // Plaits Engine
+  Chorus chorus;                // Legacy DaisySP Chorus
+  WavetableOsc wt;              // NEW Wavetable Engine
+  LogueWrapper logue;           // Custom Logue Adapter
+  BraidsWrapper braids;         // Braids Engine
+  PlaitsWrapper plaits;         // Plaits Engine
+  AirwindowsWrapper airwindows; // Airwindows Effects
 
   // Chorus 2 (Custom)
   DelayLine<float, 4800> choDelayL; // ~100ms buffer
@@ -253,6 +249,7 @@ struct Engine {
     logue.Init(sampleRate);
     braids.Init(sampleRate);
     plaits.Init(sampleRate);
+    airwindows.Init(sampleRate);
 
     // Init Chorus 2
     choDelayL.Init();
@@ -296,7 +293,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
       g_engine.logue.SetFreq(g_engine.baseFreq);
 
       // Trigger other engines
-      g_engine.plaits.Trigger();
+      g_engine.plaits.SetGate(true);
       break;
     case TYPE_NOTE_OFF:
       if (g_engine.activeNoteCount > 0) {
@@ -308,6 +305,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
 
       if (g_engine.activeNoteCount == 0) {
         g_engine.gate = false;
+        g_engine.plaits.SetGate(false);
       }
       break;
     case TYPE_PARAM_CHANGE:
@@ -428,10 +426,42 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
         g_engine.verb.SetLpFreq(g_engine.reverbTone);
         std::cout << "CMD: Reverb Tone " << evt.value << std::endl;
         break;
+
+      // --- AIRWINDOWS ---
+      case 400: // Galactic Mix
+        g_engine.airwindows.SetGalacticMix(evt.value);
+        break;
+      case 401: // Galactic Size
+        g_engine.airwindows.SetGalacticSize(evt.value);
+        break;
+      case 402: // Galactic Detune
+        g_engine.airwindows.SetGalacticDetune(evt.value);
+        break;
+      case 403: // Galactic Brightness
+        g_engine.airwindows.SetGalacticBrightness(evt.value);
+        break;
+        break;
+      case 404: // Console Drive
+        g_engine.airwindows.SetConsoleDrive(evt.value);
+        break;
+      case 405: // Mackity Drive
+        g_engine.airwindows.SetMackityDrive(evt.value);
+        break;
+      case 406: // Pressure Threshold
+        g_engine.airwindows.SetPressureThreshold(evt.value);
+        break;
+      case 410: // Studio Enable
+        g_engine.airwindows.SetEnabled(evt.value > 0.5f);
+        break;
       }
       break;
     }
   }
+
+  // TEMP BUFFERS for Block Processing
+  // Must be large enough for max frameCount (usually 480 or 1024)
+  static float leftBuf[4096];
+  static float rightBuf[4096];
 
   // 2. GENERATE AUDIO
   static bool printedFmDebug = false;
@@ -538,11 +568,26 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
       outR = right;
     }
 
-    // Master Output
-    pOut[i * DEVICE_CHANNELS] = outL * g_engine.amp;
-    pOut[i * DEVICE_CHANNELS + 1] = outR * g_engine.amp;
+    // STORE TO TEMP BUFFERS
+    if (i < 4096) {
+      leftBuf[i] = outL;
+      rightBuf[i] = outR;
+    }
   }
   (void)pInput;
+
+  // --- BLOCK PROCESSING For Airwindows ---
+  if (frameCount > 4096)
+    return; // Safety
+
+  // Process Airwindows (In-Place on buffers)
+  g_engine.airwindows.Process(leftBuf, rightBuf, frameCount);
+
+  // Re-interleave to Final Output
+  for (ma_uint32 i = 0; i < frameCount; ++i) {
+    pOut[2 * i] = leftBuf[i] * g_engine.amp;
+    pOut[2 * i + 1] = rightBuf[i] * g_engine.amp;
+  }
 }
 
 // ============================================================================
@@ -582,12 +627,14 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
   } else if (ev == MG_EV_WS_MSG) {
     struct mg_ws_message *wm = (struct mg_ws_message *)ev_data;
     std::string msg(wm->data.buf, wm->data.len);
-    std::cout << "RX: " << msg << std::endl; // Debug logging ENABLED
+    // std::cout << "RX: " << msg << std::endl;
 
     size_t colon = msg.find(':');
     if (colon != std::string::npos) {
       std::string cmd = msg.substr(0, colon);
       std::string valStr = msg.substr(colon + 1);
+      // std::cout << "Parsed CMD: " << cmd << " VAL: " << valStr <<
+      // std::endl;
 
       try {
         // String Commands Map to Enums
@@ -692,6 +739,10 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
           send_param(P_SYN1_FLT_RES, val);
         else if (cmd == "drive")
           send_param(P_SYN1_DRIVE, val);
+        else if (cmd == "tope_drive")
+          g_engine.airwindows.SetTopeDrive(val);
+        else if (cmd == "tope_fuzz")
+          g_engine.airwindows.SetTopeFuzz(val);
 
         // Toggles
         else if (cmd == "reverb")
@@ -700,6 +751,20 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
           send_param(300, val);
         else if (cmd == "delay")
           send_param(P_MIX_DLY_SEND, val);
+
+        // Studio Effects (Airwindows)
+        else if (cmd == "studio_enable")
+          send_param(410, val);
+        else if (cmd == "galactic_mix")
+          send_param(400, val);
+        else if (cmd == "galactic_size")
+          send_param(401, val);
+        else if (cmd == "galactic_detune")
+          send_param(402, val);
+        else if (cmd == "galactic_bright")
+          send_param(403, val);
+        else if (cmd == "console_drive")
+          send_param(404, val);
 
         // Delay Params
         else if (cmd == "dtime")
@@ -728,6 +793,12 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
           send_param(202, val);
         else if (cmd == "mod_wave")
           send_param(203, val);
+
+        // Airwindows Commands
+        else if (cmd == "mackity_drive")
+          send_param(405, val);
+        else if (cmd == "pressure_thresh")
+          send_param(406, val);
 
       } catch (...) {
         // Ignore parse errors

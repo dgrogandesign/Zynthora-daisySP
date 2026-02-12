@@ -1,0 +1,4 @@
+In file included from src/effects/airwindows/Console7ChannelProc.cpp:7:
+src/effects/airwindows/Console7Channel.h:25:42: warning: multi-character character constant [-Wmultichar]
+   25 |   static const unsigned long kUniqueId = 'conq';
+      |                                          ^~~~~~

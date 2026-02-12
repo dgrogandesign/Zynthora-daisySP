@@ -19,9 +19,10 @@ INCLUDES = -I. -Isrc \
 	-Isrc/logue_shim \
 	-Ilogue_units/para_saw \
 	-Isrc/braids \
-	-Isrc/braids/stmlib
+	-Isrc/braids/stmlib \
+	-Isrc/effects/airwindows
 
-CFLAGS = $(INCLUDES) -O3 -Wall -D__LINUX_ALSA__ -DTEST
+CFLAGS = $(INCLUDES) -O1 -Wall -D__LINUX_ALSA__ -DTEST
 LIBS = -lpthread -ldl -lm
 
 # DaisySP Sources (Main Library)
@@ -66,8 +67,22 @@ PLAITS_SRCS = \
 	$(wildcard src/plaits/dsp/physical_modelling/*.cc) \
 	$(wildcard src/plaits/dsp/speech/*.cc)
 
+# Airwindows Sources
+AIRWINDOWS_SRCS = \
+	src/effects/airwindows/AirwindowsWrapper.cpp \
+	src/effects/airwindows/Galactic.cpp \
+	src/effects/airwindows/GalacticProc.cpp \
+	src/effects/airwindows/Console7Channel.cpp \
+	src/effects/airwindows/Console7ChannelProc.cpp \
+	src/effects/airwindows/Mackity.cpp \
+	src/effects/airwindows/MackityProc.cpp \
+	src/effects/airwindows/Pressure5.cpp \
+	src/effects/airwindows/Pressure5Proc.cpp \
+	src/effects/airwindows/Tope.cpp \
+	src/effects/airwindows/TopeProc.cpp
+
 # Main Sources
-SRCS = src/main.cpp src/braids_wrapper.cpp src/plaits_wrapper.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS) $(BRAIDS_SRCS) $(PLAITS_SRCS)
+SRCS = src/main.cpp src/braids_wrapper.cpp src/plaits_wrapper.cpp mongoose.c $(DAISY_SRCS) $(DAISY_LGPL_SRCS) $(BRAIDS_SRCS) $(PLAITS_SRCS) $(AIRWINDOWS_SRCS)
 
 all: zynthora
 

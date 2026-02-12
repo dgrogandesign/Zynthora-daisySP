@@ -1,0 +1,50 @@
+Mackity Drive: 0.8
+Pressure Thresh: 0.5
+Zynthora (Event Backbone) Started.
+RX: drive:0
+RX: cutoff:10000
+RX: res:0
+RX: dtime:0.3
+RX: dfeed:0.4
+RX: chorus_rate:0.3
+RX: chorus_depth:0.8
+RX: reverb_time:0.85
+RX: reverb_tone:10000
+RX: amp:0.5
+RX: fm_ratio:2
+RX: fm_index:1
+RX: wt_index:0
+RX: logue_detune:0
+RX: logue_oct:0
+RX: braids_model:0
+RX: braids_fine:0
+RX: braids_coarse:0
+RX: braids_fm:0
+RX: braids_timbre:0
+RX: braids_modulation:0
+RX: braids_color:0
+RX: plaits_model:0
+RX: plaits_harmonics:0.5
+RX: plaits_timbre:0.5
+RX: plaits_morph:0.5
+RX: plaits_decay:0.5
+RX: plaits_fm:0
+RX: plaits_mod:0
+RX: studio_enable:1
+RX: galactic_mix:0
+RX: galactic_size:0.5
+RX: galactic_detune:0.5
+RX: galactic_bright:0.5
+RX: console_drive:0
+RX: reverb:0
+RX: chorus:0
+RX: delay:0
+RX: wave:sine
+RX: fm_enable:0
+RX: mod_wave:0
+CMD: Chorus Rate 0.3
+CMD: Chorus Depth 0.8
+CMD: Reverb Time 0.85
+CMD: Reverb Tone 10000
+Airwindows Enabled: ON
+CMD: Custom FM OFF
