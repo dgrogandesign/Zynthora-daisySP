@@ -260,8 +260,34 @@
                 </div>
 
                 <div class="control">
-                    <label>MODEL: <span id="plaits_modelVal">0</span></label>
-                    <input type="range" id="plaits_model" min="0" max="23" value="0" step="1">
+                    <label>MODEL: <span id="plaits_modelVal" class="hidden">0</span></label>
+                    <select id="plaits_model"
+                        style="width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #666;">
+                        <option value="0">Analog VCF</option>
+                        <option value="1">Phase Distortion</option>
+                        <option value="2">Six Op FM (1)</option>
+                        <option value="3">Six Op FM (2)</option>
+                        <option value="4">Six Op FM (3)</option>
+                        <option value="5">Wave Terrain</option>
+                        <option value="6">String Machine</option>
+                        <option value="7">Chiptune</option>
+                        <option value="8">Virtual Analog</option>
+                        <option value="9">Waveshaping</option>
+                        <option value="10">FM</option>
+                        <option value="11">Grain</option>
+                        <option value="12">Additive</option>
+                        <option value="13">Wavetable</option>
+                        <option value="14">Chord</option>
+                        <option value="15">Speech</option>
+                        <option value="16">Swarm</option>
+                        <option value="17">Noise</option>
+                        <option value="18">Particle</option>
+                        <option value="19">String</option>
+                        <option value="20">Modal</option>
+                        <option value="21">Bass Drum</option>
+                        <option value="22">Snare Drum</option>
+                        <option value="23">Hi Hat</option>
+                    </select>
                 </div>
                 <div class="fx-row">
                     <div class="control" style="flex:1">
